@@ -1,0 +1,32 @@
+[
+  {
+    "pdb_id": "5lpg",
+    "pdb_chain": "A",
+    "uniprot_ac": "Q9NV35",
+    "uniprot_id": "NUD15_HUMAN",
+    "alignment_start": 1,
+    "alignment_end": 164,
+    "bitscore": 388.4,
+    "e_value": 1.3e-116,
+    "resseq_start": 9,
+    "resseq_end": 164,
+    "coord_start": "9",
+    "coord_end": "164",
+    "uniprot_start": 9,
+    "uniprot_end": 164,
+    "overlap": 156,
+    "grouped_segments": false,
+    "identity_count": 156,
+    "identity_percent_overlap": 1.0,
+    "identity_percent": 0.9512195121951219,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "target_start": 9,
+        "target_end": 164,
+        "structure_start": 9,
+        "structure_end": 164
+      }
+    ]
+  }
+]

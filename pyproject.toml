@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dualde"
+version = "0.1.0"
+description = "Dual-graph deconvolution of enzyme fitness"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+  {name = "sgb67"},
+]
+dependencies = [
+  "pandas",
+  "numpy",
+  "scipy",
+  "biopython",
+  "networkx",
+  "matplotlib",
+  "seaborn",
+]
+
+[project.optional-dependencies]
+spurs = [
+  "torch",
+  "omegaconf",
+  "huggingface_hub",
+  "fair-esm",
+  "einops",
+  "e3nn",
+  "fairscale",
+  "lmdb",
+]
+evo = [
+  "evedesign",
+  "torch",
+]
+notebooks = [
+  "jupyter",
+  "ipykernel",
+]
+
+[tool.setuptools.packages.find]
+include = ["dualde*"]

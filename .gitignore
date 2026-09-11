@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+.ipynb_checkpoints/
+.venv/
+venv/
+examples/*/outputs/*
+!examples/*/outputs/.gitkeep
+*.ckpt
+*.pt
+hf_cache/
+torch_cache/
+.DS_Store
