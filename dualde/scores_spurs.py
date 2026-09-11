@@ -17,6 +17,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from dualde.device import require_cuda
 from dualde.mapping import (
     extract_sequence_from_pdb,
     pdb_to_uniprot_map_from_position_mapping,
@@ -200,20 +201,25 @@ def run_spurs_scan(
     """
     Run raw SPURS (get_SPURS_from_hub + parse_pdb_resolved_only) and remap to UniProt.
 
-    Requires the optional ``spurs`` extra (local SPURS package, not PyPI ``spurs``).
+    Requires a CUDA GPU and the optional ``spurs`` extra (local SPURS package
+    from ``fix/py311-inference-beta``; not the PyPI name ``spurs``). CPU
+    inference is not supported; use the cached CSV instead.
     """
+    gpu = require_cuda("SPURS inference")
+    if device is not None and not str(device).startswith("cuda"):
+        raise RuntimeError("SPURS inference in dualde requires device='cuda'.")
+
     try:
         import torch
         from spurs.inference import get_SPURS_from_hub, parse_pdb_resolved_only
     except ImportError as exc:
         raise ImportError(
             "SPURS inference extras are not installed. Use the cached CSV, or "
-            "install DualDE with the [spurs] extra and the local SPURS package "
+            "install dualde with the [spurs] extra and the local SPURS package "
             "from branch fix/py311-inference-beta (do not `pip install spurs` from PyPI)."
         ) from exc
 
-    if device is None:
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = gpu
 
     pdb_id = str(mapping_entry.get("pdb_id", os.path.splitext(os.path.basename(pdb_path))[0]))
     model, cfg = get_SPURS_from_hub(device=device)

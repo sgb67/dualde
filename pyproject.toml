@@ -8,9 +8,28 @@ version = "0.1.0"
 description = "Dual-graph deconvolution of enzyme fitness"
 readme = "README.md"
 requires-python = ">=3.10"
-license = {text = "MIT"}
+license = {file = "LICENSE"}
 authors = [
-  {name = "sgb67"},
+  {name = "dualde authors"},
+]
+keywords = [
+  "protein",
+  "enzyme",
+  "fitness",
+  "deep mutational scanning",
+  "ESM-2",
+  "SPURS",
+  "EVcouplings",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
 dependencies = [
   "pandas",
@@ -21,6 +40,11 @@ dependencies = [
   "matplotlib",
   "seaborn",
 ]
+
+[project.urls]
+Homepage = "https://github.com/sgb67/dualde"
+Source = "https://github.com/sgb67/dualde"
+Issues = "https://github.com/sgb67/dualde/issues"
 
 [project.optional-dependencies]
 spurs = [

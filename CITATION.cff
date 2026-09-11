@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+title: dualde
+message: If you use this software, please cite the dualde manuscript and the methods it wraps (ESM-2, SPURS, EVcouplings).
+type: software
+authors:
+  - family-names: dualde authors
+repository-code: https://github.com/sgb67/dualde
+license: MIT
+version: 0.1.0
+abstract: >-
+  Dual-graph deconvolution of enzyme fitness. dualde separates
+  evolutionary constraint from thermodynamic stability for single-residue
+  substitutions and routes putative catalytic signal over an EVcouplings
+  residue graph. This repository provides the Python package and a
+  NUDT15 / PDB 5lpg example.

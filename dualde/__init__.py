@@ -1,4 +1,9 @@
-"""DualDE: dual-graph deconvolution of enzyme fitness."""
+"""dualde: dual-graph deconvolution of enzyme fitness.
+
+Separates evolutionary constraint from thermodynamic stability for
+single-residue substitutions, then routes putative catalytic signal over an
+EVcouplings residue graph.
+"""
 
 from dualde.paths import example_dir, repo_root
 

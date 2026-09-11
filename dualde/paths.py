@@ -1,4 +1,4 @@
-"""Locate the DualDE repo root and example directories without hardcoded paths."""
+"""Locate the dualde repo root and example directories without hardcoded paths."""
 
 from __future__ import annotations
 
@@ -6,13 +6,13 @@ from pathlib import Path
 
 
 def repo_root() -> Path:
-    """Return the DualDE repository root (directory containing pyproject.toml)."""
+    """Return the dualde repository root (directory containing pyproject.toml)."""
     here = Path(__file__).resolve()
     for parent in here.parents:
         if (parent / "pyproject.toml").is_file():
             return parent
     raise FileNotFoundError(
-        "Could not find DualDE repo root (no pyproject.toml above dualde/)."
+        "Could not find dualde repo root (no pyproject.toml above dualde/)."
     )
 
 
