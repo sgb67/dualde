@@ -38,7 +38,6 @@ def assign_outlier_probability_model(
     Compute KDE-based outlier probabilities from rank(col_2) - rank(col_1),
     and write them to ``{col_1}_{col_2}_model``.
 
-    Pandas port of the 260721 notebook helper (originally Polars).
     ``col_1`` is typically an evolutionary score; ``col_2`` is a stability
     proxy such as ``neg_spurs`` or DMS ``stability``.
     """
@@ -84,7 +83,7 @@ def merge_evo_spurs_dms(
     activity_score_col: str = "DMS_score",
     stability_score_col: str = "DMS_score",
 ) -> pd.DataFrame:
-    """Join evolutionary scores, raw SPURS, and Yan 2020 activity/stability DMS."""
+    """Join evolutionary scores, stability predictions, and DMS activity/abundance."""
     evo_df = evo.copy()
     if evo_mutant_col != "mutant":
         evo_df = evo_df.rename(columns={evo_mutant_col: "mutant"})

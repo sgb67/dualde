@@ -1,182 +1,640 @@
 [
   {
-    "pdb_id": "7b66",
-    "pdb_chain": "A",
-    "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
-  },
-  {
     "pdb_id": "5bon",
     "pdb_chain": "A",
     "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 9,
+    "pdb_end": 164,
+    "uniprot_start": 9,
+    "uniprot_end": 164,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 9,
+        "uniprot_end": 164,
+        "pdb_start": 9,
+        "pdb_end": 164,
+        "seqres_start": 9,
+        "seqres_end": 164
+      }
+    ]
   },
   {
-    "pdb_id": "7b63",
+    "pdb_id": "5bon",
     "pdb_chain": "B",
     "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 10,
+    "pdb_end": 163,
+    "uniprot_start": 10,
+    "uniprot_end": 163,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 10,
+        "uniprot_end": 163,
+        "pdb_start": 10,
+        "pdb_end": 163,
+        "seqres_start": 10,
+        "seqres_end": 163
+      }
+    ]
   },
   {
-    "pdb_id": "7b66",
+    "pdb_id": "5bon",
     "pdb_chain": "C",
     "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 10,
+    "pdb_end": 164,
+    "uniprot_start": 10,
+    "uniprot_end": 164,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 10,
+        "uniprot_end": 164,
+        "pdb_start": 10,
+        "pdb_end": 164,
+        "seqres_start": 10,
+        "seqres_end": 164
+      }
+    ]
   },
   {
-    "pdb_id": "7b66",
+    "pdb_id": "5bon",
     "pdb_chain": "D",
     "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
-  },
-  {
-    "pdb_id": "7b63",
-    "pdb_chain": "A",
-    "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
-  },
-  {
-    "pdb_id": "5lpg",
-    "pdb_chain": "A",
-    "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
-  },
-  {
-    "pdb_id": "5lpg",
-    "pdb_chain": "B",
-    "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
-  },
-  {
-    "pdb_id": "7aop",
-    "pdb_chain": "A",
-    "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
-  },
-  {
-    "pdb_id": "5bon",
-    "pdb_chain": "C",
-    "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
-  },
-  {
-    "pdb_id": "7b66",
-    "pdb_chain": "B",
-    "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
-  },
-  {
-    "pdb_id": "7b64",
-    "pdb_chain": "A",
-    "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
-  },
-  {
-    "pdb_id": "7r0d",
-    "pdb_chain": "BBB",
-    "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
-  },
-  {
-    "pdb_id": "7b7v",
-    "pdb_chain": "B",
-    "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
-  },
-  {
-    "pdb_id": "5bon",
-    "pdb_chain": "F",
-    "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
-  },
-  {
-    "pdb_id": "5bon",
-    "pdb_chain": "H",
-    "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
-  },
-  {
-    "pdb_id": "6t5j",
-    "pdb_chain": "B",
-    "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
-  },
-  {
-    "pdb_id": "6t5j",
-    "pdb_chain": "A",
-    "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
-  },
-  {
-    "pdb_id": "5bon",
-    "pdb_chain": "B",
-    "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
-  },
-  {
-    "pdb_id": "7b7v",
-    "pdb_chain": "A",
-    "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
-  },
-  {
-    "pdb_id": "7b65",
-    "pdb_chain": "B",
-    "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
-  },
-  {
-    "pdb_id": "7b65",
-    "pdb_chain": "A",
-    "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 10,
+    "pdb_end": 158,
+    "uniprot_start": 10,
+    "uniprot_end": 158,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 10,
+        "uniprot_end": 158,
+        "pdb_start": 10,
+        "pdb_end": 158,
+        "seqres_start": 10,
+        "seqres_end": 158
+      }
+    ]
   },
   {
     "pdb_id": "5bon",
     "pdb_chain": "E",
     "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 10,
+    "pdb_end": 163,
+    "uniprot_start": 10,
+    "uniprot_end": 163,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 10,
+        "uniprot_end": 163,
+        "pdb_start": 10,
+        "pdb_end": 163,
+        "seqres_start": 10,
+        "seqres_end": 163
+      }
+    ]
   },
   {
-    "pdb_id": "7aom",
-    "pdb_chain": "A",
+    "pdb_id": "5bon",
+    "pdb_chain": "F",
     "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
-  },
-  {
-    "pdb_id": "7aom",
-    "pdb_chain": "B",
-    "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
-  },
-  {
-    "pdb_id": "7nr6",
-    "pdb_chain": "B",
-    "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
-  },
-  {
-    "pdb_id": "7nr6",
-    "pdb_chain": "A",
-    "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
-  },
-  {
-    "pdb_id": "7r0d",
-    "pdb_chain": "AAA",
-    "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 10,
+    "pdb_end": 164,
+    "uniprot_start": 10,
+    "uniprot_end": 164,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 10,
+        "uniprot_end": 164,
+        "pdb_start": 10,
+        "pdb_end": 164,
+        "seqres_start": 10,
+        "seqres_end": 164
+      }
+    ]
   },
   {
     "pdb_id": "5bon",
     "pdb_chain": "G",
     "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 10,
+    "pdb_end": 158,
+    "uniprot_start": 10,
+    "uniprot_end": 158,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 10,
+        "uniprot_end": 158,
+        "pdb_start": 10,
+        "pdb_end": 158,
+        "seqres_start": 10,
+        "seqres_end": 158
+      }
+    ]
   },
   {
     "pdb_id": "5bon",
+    "pdb_chain": "H",
+    "uniprot_ac": "Q9NV35",
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 10,
+    "pdb_end": 164,
+    "uniprot_start": 10,
+    "uniprot_end": 164,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 10,
+        "uniprot_end": 164,
+        "pdb_start": 10,
+        "pdb_end": 164,
+        "seqres_start": 10,
+        "seqres_end": 164
+      }
+    ]
+  },
+  {
+    "pdb_id": "5lpg",
+    "pdb_chain": "A",
+    "uniprot_ac": "Q9NV35",
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 9,
+    "pdb_end": 164,
+    "uniprot_start": 9,
+    "uniprot_end": 164,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 9,
+        "uniprot_end": 164,
+        "pdb_start": 9,
+        "pdb_end": 164,
+        "seqres_start": 9,
+        "seqres_end": 164
+      }
+    ]
+  },
+  {
+    "pdb_id": "5lpg",
+    "pdb_chain": "B",
+    "uniprot_ac": "Q9NV35",
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 9,
+    "pdb_end": 164,
+    "uniprot_start": 9,
+    "uniprot_end": 164,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 9,
+        "uniprot_end": 164,
+        "pdb_start": 9,
+        "pdb_end": 164,
+        "seqres_start": 9,
+        "seqres_end": 164
+      }
+    ]
+  },
+  {
+    "pdb_id": "6t5j",
+    "pdb_chain": "A",
+    "uniprot_ac": "Q9NV35",
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 10,
+    "pdb_end": 163,
+    "uniprot_start": 10,
+    "uniprot_end": 163,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 10,
+        "uniprot_end": 163,
+        "pdb_start": 10,
+        "pdb_end": 163,
+        "seqres_start": 10,
+        "seqres_end": 163
+      }
+    ]
+  },
+  {
+    "pdb_id": "6t5j",
+    "pdb_chain": "B",
+    "uniprot_ac": "Q9NV35",
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 10,
+    "pdb_end": 163,
+    "uniprot_start": 10,
+    "uniprot_end": 163,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 10,
+        "uniprot_end": 163,
+        "pdb_start": 10,
+        "pdb_end": 163,
+        "seqres_start": 10,
+        "seqres_end": 163
+      }
+    ]
+  },
+  {
+    "pdb_id": "7aom",
+    "pdb_chain": "A",
+    "uniprot_ac": "Q9NV35",
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 11,
+    "pdb_end": 164,
+    "uniprot_start": 11,
+    "uniprot_end": 164,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 11,
+        "uniprot_end": 164,
+        "pdb_start": 11,
+        "pdb_end": 164,
+        "seqres_start": 11,
+        "seqres_end": 164
+      }
+    ]
+  },
+  {
+    "pdb_id": "7aom",
+    "pdb_chain": "B",
+    "uniprot_ac": "Q9NV35",
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 11,
+    "pdb_end": 164,
+    "uniprot_start": 11,
+    "uniprot_end": 164,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 11,
+        "uniprot_end": 164,
+        "pdb_start": 11,
+        "pdb_end": 164,
+        "seqres_start": 11,
+        "seqres_end": 164
+      }
+    ]
+  },
+  {
+    "pdb_id": "7aop",
+    "pdb_chain": "A",
+    "uniprot_ac": "Q9NV35",
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 9,
+    "pdb_end": 164,
+    "uniprot_start": 9,
+    "uniprot_end": 164,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 9,
+        "uniprot_end": 164,
+        "pdb_start": 9,
+        "pdb_end": 164,
+        "seqres_start": 9,
+        "seqres_end": 164
+      }
+    ]
+  },
+  {
+    "pdb_id": "7b63",
+    "pdb_chain": "A",
+    "uniprot_ac": "Q9NV35",
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 9,
+    "pdb_end": 164,
+    "uniprot_start": 9,
+    "uniprot_end": 164,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 9,
+        "uniprot_end": 164,
+        "pdb_start": 9,
+        "pdb_end": 164,
+        "seqres_start": 9,
+        "seqres_end": 164
+      }
+    ]
+  },
+  {
+    "pdb_id": "7b63",
+    "pdb_chain": "B",
+    "uniprot_ac": "Q9NV35",
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 9,
+    "pdb_end": 164,
+    "uniprot_start": 9,
+    "uniprot_end": 164,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 9,
+        "uniprot_end": 164,
+        "pdb_start": 9,
+        "pdb_end": 164,
+        "seqres_start": 9,
+        "seqres_end": 164
+      }
+    ]
+  },
+  {
+    "pdb_id": "7b64",
+    "pdb_chain": "A",
+    "uniprot_ac": "Q9NV35",
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 9,
+    "pdb_end": 163,
+    "uniprot_start": 9,
+    "uniprot_end": 163,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 9,
+        "uniprot_end": 163,
+        "pdb_start": 9,
+        "pdb_end": 163,
+        "seqres_start": 9,
+        "seqres_end": 163
+      }
+    ]
+  },
+  {
+    "pdb_id": "7b65",
+    "pdb_chain": "A",
+    "uniprot_ac": "Q9NV35",
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 11,
+    "pdb_end": 164,
+    "uniprot_start": 11,
+    "uniprot_end": 164,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 11,
+        "uniprot_end": 164,
+        "pdb_start": 11,
+        "pdb_end": 164,
+        "seqres_start": 11,
+        "seqres_end": 164
+      }
+    ]
+  },
+  {
+    "pdb_id": "7b65",
+    "pdb_chain": "B",
+    "uniprot_ac": "Q9NV35",
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 11,
+    "pdb_end": 164,
+    "uniprot_start": 11,
+    "uniprot_end": 164,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 11,
+        "uniprot_end": 164,
+        "pdb_start": 11,
+        "pdb_end": 164,
+        "seqres_start": 11,
+        "seqres_end": 164
+      }
+    ]
+  },
+  {
+    "pdb_id": "7b66",
+    "pdb_chain": "A",
+    "uniprot_ac": "Q9NV35",
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 2,
+    "pdb_end": 162,
+    "uniprot_start": 2,
+    "uniprot_end": 162,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 2,
+        "uniprot_end": 162,
+        "pdb_start": 2,
+        "pdb_end": 162,
+        "seqres_start": 2,
+        "seqres_end": 162
+      }
+    ]
+  },
+  {
+    "pdb_id": "7b66",
+    "pdb_chain": "B",
+    "uniprot_ac": "Q9NV35",
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 10,
+    "pdb_end": 164,
+    "uniprot_start": 10,
+    "uniprot_end": 164,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 10,
+        "uniprot_end": 164,
+        "pdb_start": 10,
+        "pdb_end": 164,
+        "seqres_start": 10,
+        "seqres_end": 164
+      }
+    ]
+  },
+  {
+    "pdb_id": "7b66",
+    "pdb_chain": "C",
+    "uniprot_ac": "Q9NV35",
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 7,
+    "pdb_end": 162,
+    "uniprot_start": 7,
+    "uniprot_end": 162,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 7,
+        "uniprot_end": 162,
+        "pdb_start": 7,
+        "pdb_end": 162,
+        "seqres_start": 7,
+        "seqres_end": 162
+      }
+    ]
+  },
+  {
+    "pdb_id": "7b66",
     "pdb_chain": "D",
     "uniprot_ac": "Q9NV35",
-    "uniprot_id": "NUD15_HUMAN"
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 9,
+    "pdb_end": 164,
+    "uniprot_start": 9,
+    "uniprot_end": 164,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 9,
+        "uniprot_end": 164,
+        "pdb_start": 9,
+        "pdb_end": 164,
+        "seqres_start": 9,
+        "seqres_end": 164
+      }
+    ]
+  },
+  {
+    "pdb_id": "7b7v",
+    "pdb_chain": "A",
+    "uniprot_ac": "Q9NV35",
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 11,
+    "pdb_end": 164,
+    "uniprot_start": 11,
+    "uniprot_end": 164,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 11,
+        "uniprot_end": 164,
+        "pdb_start": 11,
+        "pdb_end": 164,
+        "seqres_start": 11,
+        "seqres_end": 164
+      }
+    ]
+  },
+  {
+    "pdb_id": "7b7v",
+    "pdb_chain": "B",
+    "uniprot_ac": "Q9NV35",
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 10,
+    "pdb_end": 164,
+    "uniprot_start": 10,
+    "uniprot_end": 164,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 10,
+        "uniprot_end": 164,
+        "pdb_start": 10,
+        "pdb_end": 164,
+        "seqres_start": 10,
+        "seqres_end": 164
+      }
+    ]
+  },
+  {
+    "pdb_id": "7nr6",
+    "pdb_chain": "A",
+    "uniprot_ac": "Q9NV35",
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 11,
+    "pdb_end": 163,
+    "uniprot_start": 11,
+    "uniprot_end": 163,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 11,
+        "uniprot_end": 163,
+        "pdb_start": 11,
+        "pdb_end": 163,
+        "seqres_start": 11,
+        "seqres_end": 163
+      }
+    ]
+  },
+  {
+    "pdb_id": "7nr6",
+    "pdb_chain": "B",
+    "uniprot_ac": "Q9NV35",
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 11,
+    "pdb_end": 163,
+    "uniprot_start": 11,
+    "uniprot_end": 163,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 11,
+        "uniprot_end": 163,
+        "pdb_start": 11,
+        "pdb_end": 163,
+        "seqres_start": 11,
+        "seqres_end": 163
+      }
+    ]
+  },
+  {
+    "pdb_id": "7r0d",
+    "pdb_chain": "AAA",
+    "uniprot_ac": "Q9NV35",
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 9,
+    "pdb_end": 163,
+    "uniprot_start": 9,
+    "uniprot_end": 163,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 9,
+        "uniprot_end": 37,
+        "pdb_start": 9,
+        "pdb_end": 37,
+        "seqres_start": 9,
+        "seqres_end": 37
+      },
+      {
+        "uniprot_start": 41,
+        "uniprot_end": 163,
+        "pdb_start": 41,
+        "pdb_end": 163,
+        "seqres_start": 41,
+        "seqres_end": 163
+      }
+    ]
+  },
+  {
+    "pdb_id": "7r0d",
+    "pdb_chain": "BBB",
+    "uniprot_ac": "Q9NV35",
+    "uniprot_id": "NUD15_HUMAN",
+    "pdb_start": 10,
+    "pdb_end": 164,
+    "uniprot_start": 10,
+    "uniprot_end": 164,
+    "structure_type": "pdb",
+    "position_mapping": [
+      {
+        "uniprot_start": 10,
+        "uniprot_end": 164,
+        "pdb_start": 10,
+        "pdb_end": 164,
+        "seqres_start": 10,
+        "seqres_end": 164
+      }
+    ]
   }
 ]

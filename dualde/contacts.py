@@ -1,17 +1,22 @@
-"""Ligand and protein contacts from one PDB plus a UniProt mapping JSON."""
+"""Ligand and protein contacts from PDB hits plus UniProt mapping JSON."""
 
 from __future__ import annotations
 
-from typing import Any, Iterable, Sequence
+import logging
+from typing import Any, Iterable, Mapping, Sequence
 
 import numpy as np
 import pandas as pd
-from Bio.PDB import PDBParser, is_aa
+from Bio.PDB import is_aa
 from Bio.PDB.Polypeptide import protein_letters_3to1
 
-from dualde.mapping import pdb_to_uniprot_map_from_position_mapping
+from dualde.mapping import homolog_chain_ids, load_structure, pdb_to_uniprot_map
 
-NUDT15_LIGAND_NAMES = ("MKB", "SYW", "4DG", "UO8", "RQ2", "RTW", "RDZ", "71V")
+logger = logging.getLogger(__name__)
+
+
+def _load_structure(pdb_path: str):
+    return load_structure(pdb_path)
 
 
 def _residue_atoms(residue) -> np.ndarray:
@@ -57,26 +62,29 @@ def _iter_ligand_residues(structure, ligand_names: Sequence[str]):
 def residue_contacts(
     pdb_path: str,
     mapping_entry: dict[str, Any],
+    ligand_names: Sequence[str],
     chain: str = "A",
-    ligand_names: Sequence[str] = NUDT15_LIGAND_NAMES,
     distance_cutoff: float = 8.0,
-    seqres_to_pdb_offset: int = 0,
     include_protein: bool = True,
+    mapped_chains: Iterable[str] | None = None,
+    homolog_chains: Iterable[str] | None = None,
 ) -> pd.DataFrame:
     """
     All-atom min distances from mapped protein residues on ``chain`` to ligands
     and (optionally) other protein chains.
 
-    Returns a long table with columns:
-    target_pos, pdb_position, pdb_id, chain, residue_name, partner_chain,
-    contact_type, minimum_distance.
+    ``ligand_names`` are PDB residue names (HETATM), e.g. ``("71V", "MKB")``.
+    UniProt numbering is taken from the mapping JSON (per-fragment PDB ranges).
+
+    Protein partners in ``homolog_chains`` (sequence identity ≥ the configured
+    cutoff) are labelled ``homodimer``. Other protein chains are omitted when
+    ``homolog_chains`` is set; otherwise unmapped protein is ``hetero_ppi``.
     """
-    parser = PDBParser(QUIET=True)
-    structure = parser.get_structure("prot", pdb_path)
+    structure = _load_structure(pdb_path)
     pdb_id = str(mapping_entry.get("pdb_id", "")).lower()
-    pdb_to_uniprot = pdb_to_uniprot_map_from_position_mapping(
-        mapping_entry, seqres_to_pdb_offset=seqres_to_pdb_offset
-    )
+    pdb_to_uniprot = pdb_to_uniprot_map(mapping_entry)
+    homologs = {str(c) for c in homolog_chains} if homolog_chains is not None else None
+    homodimer_chains = homologs if homologs is not None else {str(c) for c in (mapped_chains or [chain])}
 
     query_residues = []
     for chain_id, residue in _iter_protein_residues(structure, chain_id=chain):
@@ -108,11 +116,15 @@ def residue_contacts(
         for chain_id, residue in _iter_protein_residues(structure, chain_id=None):
             if chain_id == chain:
                 continue
+            if homologs is not None and chain_id not in homologs:
+                continue
             partners.append(
                 {
                     "residue_name": residue.get_resname().strip().upper(),
                     "partner_chain": chain_id,
-                    "contact_type": "protein",
+                    "contact_type": (
+                        "homodimer" if chain_id in homodimer_chains else "hetero_ppi"
+                    ),
                     "coords": _residue_atoms(residue),
                 }
             )
@@ -139,6 +151,75 @@ def residue_contacts(
     return pd.DataFrame(rows)
 
 
+def residue_contacts_from_structures(
+    entries: Sequence[dict[str, Any]],
+    pdb_paths: Mapping[str, str],
+    ligand_names: Sequence[str],
+    distance_cutoff: float = 8.0,
+    include_protein: bool = True,
+    query_seq: str | None = None,
+    min_identity: float = 0.6,
+) -> pd.DataFrame:
+    """Contacts for every mapping hit that passed the identity filter (before RMSD)."""
+    chains_by_pdb: dict[str, set[str]] = {}
+    entries_by_pdb: dict[str, list[dict[str, Any]]] = {}
+    for entry in entries:
+        pid = str(entry.get("pdb_id", "")).lower()
+        chains_by_pdb.setdefault(pid, set()).add(str(entry.get("pdb_chain", "")))
+        entries_by_pdb.setdefault(pid, []).append(entry)
+
+    homologs_by_pdb: dict[str, set[str]] = {}
+    if query_seq:
+        for pid, path in pdb_paths.items():
+            homologs_by_pdb[pid] = homolog_chain_ids(
+                path,
+                query_seq,
+                min_identity=min_identity,
+                mapping_entries=entries_by_pdb.get(pid, []),
+            )
+
+    frames: list[pd.DataFrame] = []
+    for entry in entries:
+        pid = str(entry.get("pdb_id", "")).lower()
+        path = pdb_paths.get(pid)
+        if not path:
+            continue
+        chain = str(entry.get("pdb_chain", "A"))
+        try:
+            df = residue_contacts(
+                path,
+                entry,
+                ligand_names=ligand_names,
+                chain=chain,
+                distance_cutoff=distance_cutoff,
+                include_protein=include_protein,
+                mapped_chains=chains_by_pdb.get(pid),
+                homolog_chains=homologs_by_pdb.get(pid),
+            )
+        except Exception as exc:
+            logger.warning(
+                "Skipping contacts for %s chain %s (%s)", pid, chain, exc
+            )
+            continue
+        if not df.empty:
+            frames.append(df)
+    if not frames:
+        return pd.DataFrame(
+            columns=[
+                "target_pos",
+                "pdb_position",
+                "wt",
+                "pdb_id",
+                "chain",
+                "residue_name",
+                "partner_chain",
+                "contact_type",
+                "minimum_distance",
+            ]
+        )
+    return pd.concat(frames, ignore_index=True)
+
+
 def closest_contacts(contacts: pd.DataFrame) -> pd.DataFrame:
     """One row per target_pos: the closest partner (any type)."""
     if contacts.empty:
@@ -153,11 +234,11 @@ def functional_residues(
     contact_types: Iterable[str] | None = None,
 ) -> pd.DataFrame:
     """
-    Contacts below ``distance_cutoff``, keeping the closest partner of each type
-    per UniProt position.
+    Closest contact below ``distance_cutoff`` for each UniProt position,
+    pooling homologous structures that passed the identity filter.
 
-    Routing notebooks typically keep ligand rows whose residue_name is in the
-    active-site ligand list.
+    Columns match the published table: ``target_pos``, ``minimum_distance``,
+    ``pdb_id``, ``residue_name``, ``contact_type``.
     """
     if contacts.empty:
         return contacts.copy()
@@ -167,19 +248,11 @@ def functional_residues(
         work = work.loc[work["contact_type"].isin(types)]
     if work.empty:
         return work
-    keys = ["target_pos", "contact_type", "residue_name"]
-    idx = work.groupby(keys)["minimum_distance"].idxmin()
-    cols = [
-        "target_pos",
-        "minimum_distance",
-        "pdb_id",
-        "residue_name",
-        "contact_type",
-    ]
-    extra = [c for c in ("partner_chain", "chain", "wt", "pdb_position") if c in work.columns]
+    idx = work.groupby("target_pos")["minimum_distance"].idxmin()
+    cols = ["target_pos", "minimum_distance", "pdb_id", "residue_name", "contact_type"]
     return (
-        work.loc[idx, cols + extra]
-        .sort_values(["target_pos", "contact_type", "minimum_distance"])
+        work.loc[idx, cols]
+        .sort_values("target_pos")
         .reset_index(drop=True)
     )
 

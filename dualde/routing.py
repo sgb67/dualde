@@ -243,7 +243,14 @@ def select_path_endpoints(
     if score_col not in df_scores.columns:
         raise ValueError(f"score_col '{score_col}' not in df_scores")
 
-    ligands_present = sorted(functional_residues_df["residue_name"].dropna().unique())
+    if "contact_type" in functional_residues_df.columns:
+        ligand_rows = functional_residues_df.loc[
+            functional_residues_df["contact_type"].astype(str) == "ligand"
+        ]
+        name_source = ligand_rows if not ligand_rows.empty else functional_residues_df
+    else:
+        name_source = functional_residues_df
+    ligands_present = sorted(name_source["residue_name"].dropna().unique())
     unknown = sorted(active_site_ligands - set(ligands_present))
 
     active_site_positions = sorted(

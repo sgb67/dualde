@@ -9,6 +9,7 @@ build/
 venv/
 examples/*/outputs/*
 !examples/*/outputs/.gitkeep
+examples/*/pdb/pdb*.ent
 *.ckpt
 *.pt
 hf_cache/

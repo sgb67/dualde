@@ -1,4 +1,9 @@
-"""SIFTS / JSON mapping, PDB fetch, chain cleaning, and SEQRES offset."""
+"""PDB fetch/clean, UniProt mapping, and FASTA I/O.
+
+Each ``position_mapping`` fragment is an ungapped correspondence among UniProt,
+PDB ATOM residue numbers, and (optionally) SEQRES indices. Fragments may
+differ; there is no global SEQRES→PDB offset.
+"""
 
 from __future__ import annotations
 
@@ -8,13 +13,33 @@ import logging
 import os
 import shutil
 import urllib.request
-from typing import Any, Sequence
+from typing import Any, Mapping, Sequence
 
 import pandas as pd
 from Bio.PDB import PDBIO, PDBList, PDBParser, Select, is_aa
 from Bio.PDB.Polypeptide import protein_letters_3to1
 
 logger = logging.getLogger(__name__)
+
+SIFTS_CSV_URL = (
+    "https://ftp.ebi.ac.uk/pub/databases/msd/sifts/flatfiles/csv/pdb_chain_uniprot.csv.gz"
+)
+
+_SIFTS_RENAME = {
+    "PDB": "pdb_id",
+    "CHAIN": "pdb_chain",
+    "SP_PRIMARY": "uniprot_ac",
+    "SP_BEG": "uniprot_start",
+    "SP_END": "uniprot_end",
+    "PDB_BEG": "pdb_start",
+    "PDB_END": "pdb_end",
+    "RES_BEG": "seqres_start",
+    "RES_END": "seqres_end",
+    "coord_start": "pdb_start",
+    "coord_end": "pdb_end",
+    "resseq_start": "seqres_start",
+    "resseq_end": "seqres_end",
+}
 
 
 def read_fasta(path: str) -> tuple[str, str]:
@@ -34,20 +59,106 @@ def read_fasta(path: str) -> tuple[str, str]:
                 chunks.append(line)
     return header, "".join(chunks)
 
-SIFTS_CSV_URL = (
-    "https://ftp.ebi.ac.uk/pub/databases/msd/sifts/flatfiles/csv/pdb_chain_uniprot.csv.gz"
-)
 
-
-def fetch_pdb_structure(pdb_id: str, output_dir: str) -> str:
-    """Download a PDB entry from RCSB into output_dir. Returns the local path."""
+def fetch_pdb_structure(pdb_id: str, output_dir: str, file_format: str = "pdb") -> str:
+    """Download a PDB or mmCIF entry from RCSB. Returns the local path."""
     os.makedirs(output_dir, exist_ok=True)
-    pdbl = PDBList()
-    pdb_file = pdbl.retrieve_pdb_file(pdb_id, pdir=output_dir, file_format="pdb")
+    pdb_file = PDBList().retrieve_pdb_file(
+        pdb_id, pdir=output_dir, file_format=file_format
+    )
     if not pdb_file or not os.path.exists(pdb_file):
         raise FileNotFoundError(f"Failed to download PDB {pdb_id} into {output_dir}")
     logger.info("Downloaded %s to %s", pdb_id, pdb_file)
     return pdb_file
+
+
+def load_structure(path: str):
+    """Parse a PDB or mmCIF file."""
+    if str(path).lower().endswith((".cif", ".mmcif")):
+        from Bio.PDB import MMCIFParser
+
+        return MMCIFParser(QUIET=True).get_structure("prot", path)
+    return PDBParser(QUIET=True).get_structure("prot", path)
+
+
+def unique_pdb_ids(entries: Sequence[dict[str, Any]]) -> list[str]:
+    """Unique PDB identifiers from mapping hits (all chains)."""
+    return sorted({str(e.get("pdb_id", "")).lower() for e in entries if e.get("pdb_id")})
+
+
+def _structure_chain_ids(path: str) -> set[str]:
+    ids: set[str] = set()
+    for model in load_structure(path):
+        for chain in model:
+            ids.add(chain.id)
+    return ids
+
+
+def _existing_structure_path(pdb_id: str, output_dir: str) -> str | None:
+    pid = pdb_id.lower()
+    candidates = [
+        os.path.join(output_dir, f"{pid}.pdb"),
+        os.path.join(output_dir, f"{pid}.cif"),
+        os.path.join(output_dir, f"pdb{pid}.ent"),
+        os.path.join(output_dir, f"{pid}.ent"),
+    ]
+    for path in candidates:
+        if os.path.isfile(path):
+            return path
+    return None
+
+
+def select_structures(
+    entries: Sequence[dict[str, Any]],
+    output_dir: str,
+    fetch_missing: bool = True,
+) -> tuple[list[dict[str, Any]], dict[str, str]]:
+    """
+    Resolve a local structure file for every homologous PDB hit.
+
+    Returns ``(entries, {pdb_id: path})``. Hits are **not** filtered by RMSD;
+    use :func:`dualde.rmsd.rmsd_heatmap_after_alignment` later to pick a
+    representative for stability prediction.
+    """
+    os.makedirs(output_dir, exist_ok=True)
+    needed_chains: dict[str, set[str]] = {}
+    for entry in entries:
+        pid = str(entry.get("pdb_id", "")).lower()
+        needed_chains.setdefault(pid, set()).add(str(entry.get("pdb_chain", "")))
+
+    paths: dict[str, str] = {}
+    for pdb_id in unique_pdb_ids(entries):
+        path = _existing_structure_path(pdb_id, output_dir)
+        if path is None and fetch_missing:
+            try:
+                fetched = fetch_pdb_structure(pdb_id, output_dir, file_format="pdb")
+            except Exception:
+                fetched = fetch_pdb_structure(pdb_id, output_dir, file_format="mmCif")
+            dest = os.path.join(
+                output_dir,
+                f"{pdb_id}.pdb" if fetched.endswith((".pdb", ".ent")) else f"{pdb_id}.cif",
+            )
+            if os.path.abspath(fetched) != os.path.abspath(dest):
+                shutil.copy2(fetched, dest)
+                if os.path.basename(fetched).startswith("pdb") and fetched.endswith(".ent"):
+                    os.remove(fetched)
+            path = dest
+        if path is None:
+            logger.warning("No structure file for %s in %s", pdb_id, output_dir)
+            continue
+        present = _structure_chain_ids(path)
+        want = needed_chains.get(pdb_id, set())
+        if want and not (want & present) and fetch_missing:
+            try:
+                fetched = fetch_pdb_structure(pdb_id, output_dir, file_format="mmCif")
+                dest = os.path.join(output_dir, f"{pdb_id}.cif")
+                if os.path.abspath(fetched) != os.path.abspath(dest):
+                    shutil.copy2(fetched, dest)
+                path = dest
+            except Exception as exc:
+                logger.warning("Could not fetch mmCIF for %s: %s", pdb_id, exc)
+        paths[pdb_id] = path
+    return list(entries), paths
 
 
 def clean_pdb_structure(
@@ -56,13 +167,8 @@ def clean_pdb_structure(
     """Keep standard amino acids from one chain; drop ligands, water, other chains."""
     parser = PDBParser(QUIET=True)
     struct = parser.get_structure("prot", pdb_file)
-
     pdb_basename = os.path.basename(pdb_file)
-    if pdb_basename.endswith((".pdb", ".PDB")):
-        stem = pdb_basename[:-4]
-    else:
-        stem = pdb_basename
-
+    stem = pdb_basename[:-4] if pdb_basename.endswith((".pdb", ".PDB")) else pdb_basename
     if output_dir is None:
         output_file = os.path.join(os.path.dirname(pdb_file), f"{stem}_cleaned.pdb")
     else:
@@ -79,14 +185,12 @@ def clean_pdb_structure(
     io = PDBIO()
     io.set_structure(struct)
     io.save(output_file, ChainProteinSelect())
-    logger.info("Cleaned PDB: kept chain %r -> %s", chain, output_file)
     return output_file
 
 
 def extract_sequence_from_pdb(pdb_file: str, chain: str = "A") -> tuple[str, list[int]]:
-    """ATOM-record sequence and residue numbers for one chain (standard amino acids)."""
-    parser = PDBParser(QUIET=True)
-    structure = parser.get_structure("prot", pdb_file)
+    """ATOM-record sequence and residue numbers for one chain."""
+    structure = load_structure(pdb_file)
     sequence: list[str] = []
     residue_numbers: list[int] = []
     for model in structure:
@@ -104,100 +208,119 @@ def extract_sequence_from_pdb(pdb_file: str, chain: str = "A") -> tuple[str, lis
     return "".join(sequence), residue_numbers
 
 
-def parse_seqres_one_letter(pdb_file: str, chain: str) -> str:
-    """SEQRES 1-letter sequence for chain, or empty string if SEQRES is absent."""
-    seq: list[str] = []
-    try:
-        with open(pdb_file, encoding="utf-8", errors="replace") as f:
-            for line in f:
-                if not line.startswith("SEQRES"):
-                    continue
-                parts = line.split()
-                if len(parts) < 5 or parts[2] != chain:
-                    continue
-                for code in parts[4:]:
-                    seq.append(protein_letters_3to1.get(code, "X"))
-    except OSError:
-        return ""
-    return "".join(seq)
-
-
-def compute_seqres_to_pdb_offset(
-    seqres_seq: str,
-    modeled_seq: str,
-    modeled_resnums: list[int],
-    prefix_len: int = 10,
-) -> int | None:
-    """Offset such that 1-indexed SEQRES position s corresponds to PDB residue s + offset."""
-    if not seqres_seq or not modeled_seq or not modeled_resnums:
-        return None
-    k = min(prefix_len, len(modeled_seq))
-    needle = modeled_seq[:k]
-    candidates: list[int] = []
-    start = 0
-    while True:
-        idx = seqres_seq.find(needle, start)
-        if idx < 0:
-            break
-        candidates.append(modeled_resnums[0] - (idx + 1))
-        start = idx + 1
-    if len(candidates) == 1:
-        return candidates[0]
-    return None
-
-
-def find_seqres_source(
-    pdb_path: str, pdb_id: str, chain: str, search_dirs: Sequence[str]
-) -> tuple[str, str]:
-    """Return (path, SEQRES sequence) from the first file that has SEQRES for chain."""
-    pid = pdb_id.lower()
-    candidates = [pdb_path]
-    raw_names = [
-        f"pdb{pid}.ent",
-        f"{pid}.pdb",
-        f"{pid}.ent",
-        f"{pdb_id}.pdb",
-        f"{pid}_cleaned.pdb",
-    ]
-    for directory in search_dirs:
-        if not directory:
-            continue
-        for name in raw_names:
-            candidates.append(os.path.join(directory, name))
-
-    seen: set[str] = set()
-    for path in candidates:
-        if not path or path in seen or not os.path.isfile(path):
-            continue
-        seen.add(path)
-        seqres = parse_seqres_one_letter(path, chain)
-        if seqres:
-            return path, seqres
-    return "", ""
-
-
-def seqres_to_pdb_offset(
+def query_identity(
     pdb_path: str,
-    pdb_id: str,
     chain: str,
-    search_dirs: Sequence[str] | None = None,
-) -> int:
-    """Compute SEQRES→PDB residue-number offset, defaulting to 0 if it cannot be inferred."""
-    dirs = list(search_dirs or [])
-    dirs.insert(0, os.path.dirname(pdb_path))
-    src, seqres = find_seqres_source(pdb_path, pdb_id, chain, dirs)
-    if not seqres:
-        logger.warning("No SEQRES for %s chain %s; using offset 0", pdb_id, chain)
-        return 0
-    modeled_seq, modeled_resnums = extract_sequence_from_pdb(pdb_path, chain)
-    offset = compute_seqres_to_pdb_offset(seqres, modeled_seq, modeled_resnums)
-    if offset is None:
-        logger.warning(
-            "Could not compute SEQRES→PDB offset from %s; using 0", src
+    query_seq: str,
+    mapping_entry: dict[str, Any] | None = None,
+    first_index: int = 1,
+) -> float:
+    """
+    Sequence identity of a PDB chain to the query, over the **full query length**.
+
+    Mapped residues that match the query count as identities; unmapped query
+    positions count as mismatches (same definition as the original ≥60% filter).
+    """
+    if not query_seq:
+        return 0.0
+    seq, resnums = extract_sequence_from_pdb(pdb_path, chain=chain)
+    if not seq:
+        return 0.0
+    if mapping_entry is not None:
+        pdb2uni = pdb_to_uniprot_map(mapping_entry)
+        matches = 0
+        for aa, pdb_pos in zip(seq, resnums):
+            uni = pdb2uni.get(int(pdb_pos))
+            if uni is None:
+                continue
+            idx = int(uni) - first_index
+            if 0 <= idx < len(query_seq) and query_seq[idx] == aa:
+                matches += 1
+        return matches / len(query_seq)
+
+    from Bio.Align import PairwiseAligner
+
+    aligner = PairwiseAligner()
+    aligner.mode = "global"
+    aligner.match_score = 1.0
+    aligner.mismatch_score = 0.0
+    aligner.open_gap_score = -10.0
+    aligner.extend_gap_score = -0.5
+    aln = aligner.align(query_seq, seq)[0]
+    matches = sum(a == b and a != "-" for a, b in zip(str(aln[0]), str(aln[1])))
+    return matches / len(query_seq)
+
+
+def identity_table(
+    entries: Sequence[dict[str, Any]],
+    pdb_paths: Mapping[str, str],
+    query_seq: str,
+    first_index: int = 1,
+) -> pd.DataFrame:
+    """One row per mapping hit with query identity over the full sequence."""
+    rows = []
+    for entry in entries:
+        pid = str(entry.get("pdb_id", "")).lower()
+        chain = str(entry.get("pdb_chain", ""))
+        path = pdb_paths.get(pid)
+        ident = float("nan")
+        if path:
+            ident = query_identity(
+                path, chain, query_seq, mapping_entry=entry, first_index=first_index
+            )
+        rows.append(
+            {
+                "pdb_id": pid,
+                "pdb_chain": chain,
+                "identity_percent": ident,
+                "n_mapped": len(pdb_to_uniprot_map(entry)),
+            }
         )
-        return 0
-    logger.info("SEQRES offset for %s chain %s: %+d (from %s)", pdb_id, chain, offset, src)
-    return offset
+    return pd.DataFrame(rows)
+
+
+def filter_hits_by_identity(
+    entries: Sequence[dict[str, Any]],
+    pdb_paths: Mapping[str, str],
+    query_seq: str,
+    min_identity: float = 0.6,
+    first_index: int = 1,
+) -> tuple[list[dict[str, Any]], pd.DataFrame]:
+    """Keep mapping hits whose chain identity to the query is ≥ ``min_identity``."""
+    table = identity_table(entries, pdb_paths, query_seq, first_index=first_index)
+    keep: set[tuple[str, str]] = set()
+    if not table.empty:
+        passed = table.loc[table["identity_percent"] >= float(min_identity)]
+        keep = set(zip(passed["pdb_id"].astype(str), passed["pdb_chain"].astype(str)))
+    kept = [
+        e
+        for e in entries
+        if (str(e.get("pdb_id", "")).lower(), str(e.get("pdb_chain", ""))) in keep
+    ]
+    return kept, table
+
+
+def homolog_chain_ids(
+    pdb_path: str,
+    query_seq: str,
+    min_identity: float = 0.6,
+    mapping_entries: Sequence[dict[str, Any]] | None = None,
+    first_index: int = 1,
+) -> set[str]:
+    """PDB chain IDs whose identity to the query is ≥ ``min_identity``."""
+    by_chain = {str(e.get("pdb_chain", "")): e for e in (mapping_entries or [])}
+    homologs: set[str] = set()
+    for chain in _structure_chain_ids(pdb_path):
+        ident = query_identity(
+            pdb_path,
+            chain,
+            query_seq,
+            mapping_entry=by_chain.get(chain),
+            first_index=first_index,
+        )
+        if ident >= float(min_identity):
+            homologs.add(chain)
+    return homologs
 
 
 def load_structural_mapping_json(path: str) -> list[dict[str, Any]]:
@@ -208,7 +331,7 @@ def load_structural_mapping_json(path: str) -> list[dict[str, Any]]:
     if isinstance(data, dict) and isinstance(data.get("chain_hits"), list):
         return data["chain_hits"]
     raise ValueError(
-        f"Expected JSON array or object with 'chain_hits' at {path!r}, got {type(data).__name__}"
+        f"Expected a JSON array or an object with 'chain_hits' at {path!r}"
     )
 
 
@@ -220,73 +343,101 @@ def save_mapping_json(entries: Sequence[dict[str, Any]], path: str) -> str:
     return path
 
 
-def entry_matches_structure(
-    entry: dict[str, Any],
-    pdb_id: str,
-    chain: str,
-    uniprot_id: str | None,
-) -> bool:
-    if str(entry.get("pdb_id", "")).lower() != str(pdb_id).lower():
-        return False
-    if str(entry.get("pdb_chain", "")).strip() != str(chain).strip():
-        return False
-    if not uniprot_id:
-        return True
-    uid = str(uniprot_id).strip()
-    return entry.get("uniprot_id") == uid or entry.get("uniprot_ac") == uid
-
-
 def select_mapping_entry(
     entries: Sequence[dict[str, Any]],
     pdb_id: str,
     chain: str,
     uniprot_id: str | None = None,
 ) -> dict[str, Any]:
-    matches = [
-        e for e in entries if entry_matches_structure(e, pdb_id, chain, uniprot_id)
-    ]
+    def _match(entry, require_uniprot: bool) -> bool:
+        if str(entry.get("pdb_id", "")).lower() != str(pdb_id).lower():
+            return False
+        if str(entry.get("pdb_chain", "")).strip() != str(chain).strip():
+            return False
+        if not require_uniprot or not uniprot_id:
+            return True
+        uid = str(uniprot_id).strip()
+        return entry.get("uniprot_id") == uid or entry.get("uniprot_ac") == uid
+
+    matches = [e for e in entries if _match(e, True)]
     if not matches and uniprot_id:
-        matches = [
-            e for e in entries if entry_matches_structure(e, pdb_id, chain, None)
-        ]
+        matches = [e for e in entries if _match(e, False)]
     if not matches:
         raise ValueError(
-            f"No JSON mapping entry for pdb_id={pdb_id!r} chain={chain!r} "
-            f"uniprot={uniprot_id!r}"
+            f"No mapping entry for pdb_id={pdb_id!r} chain={chain!r} uniprot={uniprot_id!r}"
         )
     return matches[0]
 
 
-def pdb_to_uniprot_map_from_position_mapping(
-    entry: dict[str, Any],
-    seqres_to_pdb_offset: int = 0,
-) -> dict[int, int]:
-    """Build {pdb_residue_number -> UniProt position (1-based)} from one JSON record."""
+def _as_resnum(value: object) -> int:
+    text = str(value).strip()
+    num = ""
+    for i, c in enumerate(text):
+        if c == "-" and i == 0:
+            num += c
+            continue
+        if c.isdigit():
+            num += c
+            continue
+        break
+    if not num or num == "-":
+        raise ValueError(f"Could not parse residue number from {value!r}")
+    return int(num)
+
+
+def _first(seg: dict[str, Any], *keys: str) -> int:
+    for key in keys:
+        if key in seg and seg[key] is not None and str(seg[key]).strip() != "":
+            return _as_resnum(seg[key])
+    raise KeyError(f"Segment missing any of {keys}: {seg}")
+
+
+def fragment_table(entry: dict[str, Any]) -> pd.DataFrame:
+    """One row per mapped fragment (UniProt, PDB ATOM, SEQRES)."""
+    rows = []
+    for i, seg in enumerate(entry.get("position_mapping") or [], start=1):
+        u0 = _first(seg, "uniprot_start", "target_start")
+        u1 = _first(seg, "uniprot_end", "target_end")
+        p0 = _first(seg, "pdb_start", "coord_start", "structure_start")
+        p1 = _first(seg, "pdb_end", "coord_end", "structure_end")
+        row = {
+            "fragment": i,
+            "uniprot_start": u0,
+            "uniprot_end": u1,
+            "pdb_start": p0,
+            "pdb_end": p1,
+            "n_residues": u1 - u0 + 1,
+        }
+        try:
+            row["seqres_start"] = _first(seg, "seqres_start", "resseq_start")
+            row["seqres_end"] = _first(seg, "seqres_end", "resseq_end")
+        except KeyError:
+            pass
+        rows.append(row)
+    return pd.DataFrame(rows)
+
+
+def pdb_to_uniprot_map(entry: dict[str, Any]) -> dict[int, int]:
+    """``{PDB ATOM residue number → UniProt position}`` from mapping fragments."""
     out: dict[int, int] = {}
-    segments = entry.get("position_mapping") or []
-    for seg in segments:
-        ts = int(seg["target_start"])
-        te = int(seg["target_end"])
-        ss = int(seg["structure_start"])
-        se = int(seg["structure_end"])
-        len_t = te - ts + 1
-        len_s = se - ss + 1
-        if len_t != len_s:
+    for _, row in fragment_table(entry).iterrows():
+        u0, u1 = int(row["uniprot_start"]), int(row["uniprot_end"])
+        p0, p1 = int(row["pdb_start"]), int(row["pdb_end"])
+        n_u, n_p = u1 - u0 + 1, p1 - p0 + 1
+        if n_u != n_p:
             raise ValueError(
-                f"Segment length mismatch in position_mapping: "
-                f"target [{ts},{te}] len={len_t} vs structure [{ss},{se}] len={len_s} "
+                f"Fragment length mismatch: UniProt [{u0},{u1}] vs PDB [{p0},{p1}] "
                 f"(pdb={entry.get('pdb_id')} chain={entry.get('pdb_chain')})"
             )
-        for k in range(len_t):
-            out[ss + k + seqres_to_pdb_offset] = ts + k
+        for k in range(n_u):
+            out[p0 + k] = u0 + k
     return out
 
 
 def download_sifts_table(dest_path: str, url: str = SIFTS_CSV_URL) -> str:
-    """Download the EBI SIFTS pdb_chain_uniprot CSV (gzipped) and gunzip it."""
+    """Download the EBI SIFTS pdb_chain_uniprot CSV and gunzip it."""
     os.makedirs(os.path.dirname(os.path.abspath(dest_path)) or ".", exist_ok=True)
     gz_path = dest_path if dest_path.endswith(".gz") else dest_path + ".gz"
-    logger.info("Downloading SIFTS table from %s", url)
     with urllib.request.urlopen(url) as resp, open(gz_path, "wb") as out:
         shutil.copyfileobj(resp, out)
     if dest_path.endswith(".gz"):
@@ -297,112 +448,116 @@ def download_sifts_table(dest_path: str, url: str = SIFTS_CSV_URL) -> str:
     return dest_path
 
 
+def _mapping_entry_from_hits(
+    hits: pd.DataFrame,
+    pdb_id: str,
+    chain: str,
+    uniprot_id: str | None,
+) -> dict[str, Any]:
+    pid = pdb_id.lower()
+    if hits.empty:
+        raise ValueError(f"No SIFTS rows for pdb_id={pdb_id!r} chain={chain!r}")
+
+    if uniprot_id:
+        uid = str(uniprot_id).strip()
+        ac = hits["uniprot_ac"].astype(str)
+        extra = hits["uniprot_id"].astype(str) if "uniprot_id" in hits.columns else ac
+        filtered = hits[(ac == uid) | (extra == uid)]
+        if not filtered.empty:
+            hits = filtered
+
+    unique_ac = hits["uniprot_ac"].unique()
+    if len(unique_ac) > 1:
+        raise ValueError(
+            f"Multiple UniProt accessions on {pdb_id} chain {chain}: {list(unique_ac)}. "
+            "Pass uniprot_id to disambiguate."
+        )
+
+    position_mapping = []
+    for _, row in hits.iterrows():
+        u0, u1 = _as_resnum(row["uniprot_start"]), _as_resnum(row["uniprot_end"])
+        if "pdb_start" in hits.columns and pd.notna(row.get("pdb_start")):
+            p0, p1 = _as_resnum(row["pdb_start"]), _as_resnum(row["pdb_end"])
+        else:
+            p0, p1 = _as_resnum(row["seqres_start"]), _as_resnum(row["seqres_end"])
+        seg = {
+            "uniprot_start": u0,
+            "uniprot_end": u1,
+            "pdb_start": p0,
+            "pdb_end": p1,
+        }
+        if "seqres_start" in hits.columns and pd.notna(row.get("seqres_start")):
+            seg["seqres_start"] = _as_resnum(row["seqres_start"])
+            seg["seqres_end"] = _as_resnum(row["seqres_end"])
+        position_mapping.append(seg)
+
+    first = hits.iloc[0]
+    pdb_nums = [_as_resnum(s["pdb_start"]) for s in position_mapping] + [
+        _as_resnum(s["pdb_end"]) for s in position_mapping
+    ]
+    uni_nums = [_as_resnum(s["uniprot_start"]) for s in position_mapping] + [
+        _as_resnum(s["uniprot_end"]) for s in position_mapping
+    ]
+    return {
+        "pdb_id": pid,
+        "pdb_chain": chain,
+        "uniprot_ac": str(first["uniprot_ac"]),
+        "uniprot_id": uniprot_id or str(first["uniprot_ac"]),
+        "pdb_start": min(pdb_nums),
+        "pdb_end": max(pdb_nums),
+        "uniprot_start": min(uni_nums),
+        "uniprot_end": max(uni_nums),
+        "structure_type": "pdb",
+        "position_mapping": position_mapping,
+    }
+
+
 def mapping_entry_from_sifts(
     sifts_table_path: str,
     pdb_id: str,
     chain: str,
     uniprot_id: str | None,
 ) -> dict[str, Any]:
-    """
-    Build a distance-pipeline-style mapping record from a SIFTS CSV.
-
-    structure_* values are SEQRES (resseq) indices, matching the JSON schema
-    produced by search_protein in the distance pipeline notebooks.
-    """
+    """Build a mapping record from a SIFTS chain–UniProt table (one row per fragment)."""
     if not os.path.isfile(sifts_table_path):
         raise FileNotFoundError(
-            f"SIFTS table not found: {sifts_table_path}. "
-            f"Download from {SIFTS_CSV_URL} or pass a mapping JSON."
+            f"SIFTS table not found: {sifts_table_path}. Download from {SIFTS_CSV_URL}."
         )
 
-    usecols = [
-        "pdb_id",
-        "pdb_chain",
-        "uniprot_ac",
-        "resseq_start",
-        "resseq_end",
-        "uniprot_start",
-        "uniprot_end",
-    ]
-    table = pd.read_csv(
-        sifts_table_path,
-        comment="#",
-        usecols=lambda c: c in usecols or c == "uniprot_id",
-    )
+    table = pd.read_csv(sifts_table_path, comment="#")
+    table = table.rename(columns={c: _SIFTS_RENAME.get(c, c) for c in table.columns})
     pid = pdb_id.lower()
-    hits = table[(table["pdb_id"] == pid) & (table["pdb_chain"] == chain)]
+    hits = table[(table["pdb_id"].astype(str).str.lower() == pid) & (table["pdb_chain"] == chain)]
+    return _mapping_entry_from_hits(hits, pdb_id, chain, uniprot_id)
+
+
+def mapping_entries_from_sifts(
+    sifts_table_path: str,
+    uniprot_id: str,
+    pdb_ids: Sequence[str] | None = None,
+    uniprot_name: str | None = None,
+) -> list[dict[str, Any]]:
+    """One mapping record per PDB chain for a UniProt accession or identifier."""
+    if not os.path.isfile(sifts_table_path):
+        raise FileNotFoundError(
+            f"SIFTS table not found: {sifts_table_path}. Download from {SIFTS_CSV_URL}."
+        )
+    table = pd.read_csv(sifts_table_path, comment="#")
+    table = table.rename(columns={c: _SIFTS_RENAME.get(c, c) for c in table.columns})
+    uid = str(uniprot_id).strip()
+    ac = table["uniprot_ac"].astype(str)
+    extra = table["uniprot_id"].astype(str) if "uniprot_id" in table.columns else ac
+    hits = table[(ac == uid) | (extra == uid)]
+    if pdb_ids:
+        keep = {str(p).lower() for p in pdb_ids}
+        hits = hits[hits["pdb_id"].astype(str).str.lower().isin(keep)]
     if hits.empty:
-        raise ValueError(
-            f"No SIFTS rows for pdb_id={pdb_id!r} chain={chain!r} in {sifts_table_path}"
-        )
+        raise ValueError(f"No SIFTS rows for uniprot={uniprot_id!r}")
 
-    if uniprot_id:
-        uid = str(uniprot_id).strip()
-        ac_col = hits["uniprot_ac"].astype(str)
-        if "uniprot_id" in hits.columns:
-            id_col = hits["uniprot_id"].astype(str)
-            filtered = hits[(ac_col == uid) | (id_col == uid)]
-        else:
-            filtered = hits[ac_col == uid]
-        if not filtered.empty:
-            hits = filtered
-        else:
-            logger.warning(
-                "SIFTS uniprot filter %r matched no rows for %s chain %s; "
-                "using pdb_id+chain hits",
-                uid,
-                pdb_id,
-                chain,
-            )
-
-    unique_ac = hits["uniprot_ac"].unique()
-    if len(unique_ac) > 1:
-        raise ValueError(
-            f"Multiple UniProt accessions on {pdb_id} chain {chain}: {list(unique_ac)}. "
-            "Pass uniprot_id (accession) to disambiguate."
-        )
-
-    position_mapping = []
-    for _, row in hits.iterrows():
-        position_mapping.append(
-            {
-                "target_start": int(row["uniprot_start"]),
-                "target_end": int(row["uniprot_end"]),
-                "structure_start": int(row["resseq_start"]),
-                "structure_end": int(row["resseq_end"]),
-            }
-        )
-
-    first = hits.iloc[0]
-    return {
-        "pdb_id": pid,
-        "pdb_chain": chain,
-        "uniprot_ac": str(first["uniprot_ac"]),
-        "uniprot_id": uniprot_id or str(first["uniprot_ac"]),
-        "resseq_start": int(hits["resseq_start"].min()),
-        "resseq_end": int(hits["resseq_end"].max()),
-        "uniprot_start": int(hits["uniprot_start"].min()),
-        "uniprot_end": int(hits["uniprot_end"].max()),
-        "structure_type": "pdb",
-        "position_mapping": position_mapping,
-    }
-
-
-def pdb_hits_from_mapping(entries: Sequence[dict[str, Any]]) -> pd.DataFrame:
-    """Unique (pdb_id, pdb_chain) rows from a mapping JSON."""
-    rows = []
-    seen: set[tuple[str, str]] = set()
-    for entry in entries:
-        key = (str(entry.get("pdb_id", "")).lower(), str(entry.get("pdb_chain", "")).strip())
-        if key in seen or not key[0]:
-            continue
-        seen.add(key)
-        rows.append(
-            {
-                "pdb_id": key[0],
-                "pdb_chain": key[1],
-                "uniprot_ac": entry.get("uniprot_ac"),
-                "uniprot_id": entry.get("uniprot_id"),
-            }
-        )
-    return pd.DataFrame(rows)
+    entries = []
+    for (pid, chain), group in hits.groupby(["pdb_id", "pdb_chain"], sort=True):
+        entry = _mapping_entry_from_hits(group, str(pid), str(chain), uniprot_id=uid)
+        if uniprot_name:
+            entry["uniprot_id"] = uniprot_name
+        entries.append(entry)
+    return entries

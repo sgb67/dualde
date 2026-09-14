@@ -517,7 +517,7 @@ def rmsd_heatmap_after_alignment(
     return rmsd_df, cleaned_files
 
 
-def unique_pdb_ids(hits: pd.DataFrame, chain: str | None = "A") -> List[str]:
+def unique_pdb_ids(hits: pd.DataFrame, chain: str | None = None) -> List[str]:
     """PDB IDs from a hits table, optionally restricted to one chain."""
     work = hits
     if chain is not None and "pdb_chain" in work.columns:

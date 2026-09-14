@@ -64,6 +64,9 @@ evo = [
 notebooks = [
   "jupyter",
   "ipykernel",
+  "nbclient",
+  "nbconvert",
+  "nbformat",
 ]
 
 [tool.setuptools.packages.find]
