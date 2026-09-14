@@ -2,11 +2,8 @@
 
 **Dual-graph deconvolution of enzyme fitness**
 
-The package name is **dualde** (lowercase), so it is not read as directed
-evolution (DE).
-
-dualde separates evolutionary constraint from thermodynamic stability for
-single-residue substitutions, then traces putative catalytic effects along
+**dualde** separates evolutionary constraint from stability for
+single-residue substitutions, and then traces putative catalytic effects along
 an [EVcouplings](https://evcouplings.org) residue–residue graph.
 
 This repository is the accompanying software and a complete **NUDT15 /
@@ -142,28 +139,6 @@ edit `config.json`. Then:
 4. **Stability.** SPURS on GPU, or a UniProt-numbered raw ΔΔ*G* table.
 5. **Deconvolution and routing.** Notebooks 05–06 use the cutoffs and ligands
    in `config.json`.
-
----
-
-## Package layout
-
-```
-dualde/
-  mapping.py         PDB I/O, UniProt fragments, select_structures
-  contacts.py        ligand / protein distances
-  rmsd.py            CA-RMSD clustering
-  scores.py          ESM-2 650M and SPURS
-  deconvolution.py   rank-difference KDE
-  routing.py         coupling graph, Yen paths
-notebooks/           01–06
-examples/NUDT15_HUMAN/
-  config.json
-  ...
-```
-
-NUDT15 ligand names in `config.json`: `MKB`, `SYW`, `4DG`, `UO8`, `RQ2`,
-`RTW`, `RDZ`, `71V`. Different hits carry different ligands; 5lpg contains
-**71V**. Functional sites pool hits with ≥60% query identity, before RMSD.
 
 ---
 
