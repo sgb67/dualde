@@ -57,7 +57,6 @@ Source `scripts/env.sh` **before pip** so wheels and model caches go to
 
 ```bash
 cd dualde
-conda activate /software/conda/users/$USER/<env>
 source scripts/env.sh
 
 python -m pip install -U pip
@@ -79,7 +78,7 @@ or an archival zip.
 
 ```bash
 cd dualde
-conda activate /software/conda/users/$USER/<env>
+# conda activate /path/to/your/<env>
 source scripts/env.sh
 jupyter lab notebooks/
 ```
@@ -145,9 +144,10 @@ edit `config.json`. Then:
 2. **Structures and contacts.** `select_structures` fetches every mapped PDB.
    Keep chains whose identity to the query is ≥ `min_identity` (default 0.6,
    over the full query length). `residue_contacts_from_structures` then scores
-   ligands and homodimer interfaces on those hits; protein partners below the
-   identity cutoff are ignored. RMSD clustering is only used to justify the
-   representative PDB for SPURS; it does not drop contact sites.
+   ligands and homodimer interfaces on those hits. Protein partners must also
+   belong to the PDBe preferred biological assembly (with the query chain);
+   crystal-packing copies are ignored. RMSD clustering is only used to justify
+   the representative PDB for SPURS; it does not drop contact sites.
 3. **Evolution.** ESM-2 650M on GPU, or a table with `mutation` / `ESM2_650M`.
 4. **Stability.** SPURS on GPU, or a UniProt-numbered raw ΔΔ*G* table.
 5. **Deconvolution and routing.** Notebooks 05–06 use the cutoffs and ligands

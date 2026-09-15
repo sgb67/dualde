@@ -10,7 +10,7 @@ import pandas as pd
 from Bio.PDB import is_aa
 from Bio.PDB.Polypeptide import protein_letters_3to1
 
-from dualde.mapping import homolog_chain_ids, load_structure, pdb_to_uniprot_map
+from dualde.mapping import homolog_chain_ids, load_structure, pdb_to_uniprot_map, preferred_assembly_chains
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +68,7 @@ def residue_contacts(
     include_protein: bool = True,
     mapped_chains: Iterable[str] | None = None,
     homolog_chains: Iterable[str] | None = None,
+    preferred_chains: Iterable[str] | None = None,
 ) -> pd.DataFrame:
     """
     All-atom min distances from mapped protein residues on ``chain`` to ligands
@@ -76,15 +77,19 @@ def residue_contacts(
     ``ligand_names`` are PDB residue names (HETATM), e.g. ``("71V", "MKB")``.
     UniProt numbering is taken from the mapping JSON (per-fragment PDB ranges).
 
-    Protein partners in ``homolog_chains`` (sequence identity ≥ the configured
-    cutoff) are labelled ``homodimer``. Other protein chains are omitted when
-    ``homolog_chains`` is set; otherwise unmapped protein is ``hetero_ppi``.
+    Protein partners must be in ``homolog_chains`` (sequence identity cutoff)
+    **and**, when set, in ``preferred_chains`` (PDBe preferred biological
+    assembly). Both the query chain and the partner must belong to that
+    assembly. Those partners are labelled ``homodimer``.
     """
     structure = _load_structure(pdb_path)
     pdb_id = str(mapping_entry.get("pdb_id", "")).lower()
     pdb_to_uniprot = pdb_to_uniprot_map(mapping_entry)
     homologs = {str(c) for c in homolog_chains} if homolog_chains is not None else None
+    preferred = {str(c) for c in preferred_chains} if preferred_chains is not None else None
     homodimer_chains = homologs if homologs is not None else {str(c) for c in (mapped_chains or [chain])}
+    if preferred is not None:
+        homodimer_chains = homodimer_chains & preferred
 
     query_residues = []
     for chain_id, residue in _iter_protein_residues(structure, chain_id=chain):
@@ -113,10 +118,15 @@ def residue_contacts(
             }
         )
     if include_protein:
+        query_in_assembly = preferred is None or chain in preferred
         for chain_id, residue in _iter_protein_residues(structure, chain_id=None):
             if chain_id == chain:
                 continue
+            if not query_in_assembly:
+                continue
             if homologs is not None and chain_id not in homologs:
+                continue
+            if preferred is not None and chain_id not in preferred:
                 continue
             partners.append(
                 {
@@ -159,8 +169,13 @@ def residue_contacts_from_structures(
     include_protein: bool = True,
     query_seq: str | None = None,
     min_identity: float = 0.6,
+    use_preferred_assembly: bool = True,
 ) -> pd.DataFrame:
-    """Contacts for every mapping hit that passed the identity filter (before RMSD)."""
+    """Contacts for every mapping hit that passed the identity filter (before RMSD).
+
+    Protein–protein contacts use PDBe preferred-assembly chain pairs when
+    ``use_preferred_assembly`` is true (crystal-packing copies are ignored).
+    """
     chains_by_pdb: dict[str, set[str]] = {}
     entries_by_pdb: dict[str, list[dict[str, Any]]] = {}
     for entry in entries:
@@ -177,6 +192,20 @@ def residue_contacts_from_structures(
                 min_identity=min_identity,
                 mapping_entries=entries_by_pdb.get(pid, []),
             )
+
+    preferred_by_pdb: dict[str, set[str] | None] = {}
+    if use_preferred_assembly:
+        for pid in pdb_paths:
+            try:
+                preferred_by_pdb[pid] = preferred_assembly_chains(pid)
+            except Exception as exc:
+                logger.warning(
+                    "Could not fetch PDBe preferred assembly for %s (%s); "
+                    "skipping protein partners for this entry",
+                    pid,
+                    exc,
+                )
+                preferred_by_pdb[pid] = set()
 
     frames: list[pd.DataFrame] = []
     for entry in entries:
@@ -195,6 +224,7 @@ def residue_contacts_from_structures(
                 include_protein=include_protein,
                 mapped_chains=chains_by_pdb.get(pid),
                 homolog_chains=homologs_by_pdb.get(pid),
+                preferred_chains=preferred_by_pdb.get(pid),
             )
         except Exception as exc:
             logger.warning(

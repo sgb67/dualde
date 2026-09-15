@@ -300,6 +300,75 @@ def filter_hits_by_identity(
     return kept, table
 
 
+_PDBE_JSON_CACHE: dict[str, Any] = {}
+_PREFERRED_CHAIN_CACHE: dict[str, set[str]] = {}
+
+PDBE_SUMMARY_URL = "https://www.ebi.ac.uk/pdbe/api/pdb/entry/summary/{pdb_id}"
+PDBE_ASSEMBLY_URL = "https://www.ebi.ac.uk/pdbe/api/pdb/entry/assembly/{pdb_id}"
+PDBE_MOLECULES_URL = "https://www.ebi.ac.uk/pdbe/api/pdb/entry/molecules/{pdb_id}"
+
+
+def _pdbe_json(url: str) -> Any:
+    if url in _PDBE_JSON_CACHE:
+        return _PDBE_JSON_CACHE[url]
+    req = urllib.request.Request(url, headers={"Accept": "application/json"})
+    with urllib.request.urlopen(req, timeout=60) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+    _PDBE_JSON_CACHE[url] = data
+    return data
+
+
+def _auth_chain_from_asym(pdb_id: str) -> dict[str, str]:
+    """Map PDBe struct_asym IDs to author chain IDs used in local PDB/mmCIF files."""
+    pid = pdb_id.lower()
+    records = _pdbe_json(PDBE_MOLECULES_URL.format(pdb_id=pid)).get(pid, [])
+    mapping: dict[str, str] = {}
+    for mol in records:
+        auth = [str(c) for c in (mol.get("in_chains") or [])]
+        asym = [str(c) for c in (mol.get("in_struct_asyms") or [])]
+        if len(auth) == len(asym) and auth:
+            for a, c in zip(asym, auth):
+                mapping[a] = c
+        else:
+            for c in auth:
+                mapping.setdefault(c, c)
+    return mapping
+
+
+def preferred_assembly_chains(pdb_id: str) -> set[str]:
+    """
+    Author chain IDs of polymer copies in the PDBe **preferred** biological
+    assembly (e.g. 5bon A+B, not the other crystal-packing dimers).
+    """
+    pid = str(pdb_id).lower()
+    if pid in _PREFERRED_CHAIN_CACHE:
+        return set(_PREFERRED_CHAIN_CACHE[pid])
+    summary = _pdbe_json(PDBE_SUMMARY_URL.format(pdb_id=pid)).get(pid, [{}])[0]
+    preferred_ids = {
+        str(a.get("assembly_id"))
+        for a in summary.get("assemblies") or []
+        if a.get("preferred")
+    }
+    if not preferred_ids:
+        preferred_ids = {"1"}
+    assemblies = _pdbe_json(PDBE_ASSEMBLY_URL.format(pdb_id=pid)).get(pid, [])
+    auth_from_asym = _auth_chain_from_asym(pid)
+    chains: set[str] = set()
+    for assembly in assemblies:
+        if str(assembly.get("assembly_id")) not in preferred_ids:
+            continue
+        for ent in assembly.get("entities") or []:
+            moltype = str(ent.get("molecule_type") or "").lower()
+            if "polypeptide" not in moltype:
+                continue
+            for ch in ent.get("in_chains") or []:
+                key = str(ch)
+                chains.add(auth_from_asym.get(key, key))
+    _PREFERRED_CHAIN_CACHE[pid] = chains
+    logger.info("PDBe preferred assembly for %s: %s", pid, sorted(chains))
+    return set(chains)
+
+
 def homolog_chain_ids(
     pdb_path: str,
     query_seq: str,
