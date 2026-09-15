@@ -13,6 +13,7 @@ examples/*/pdb/pdb*.ent
 *.ckpt
 *.pt
 .cache/
+.conda/
 hf_cache/
 torch_cache/
 .DS_Store

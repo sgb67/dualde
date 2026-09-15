@@ -14,9 +14,10 @@ case "${DUALDE_CACHE}" in
 esac
 mkdir -p "${DUALDE_CACHE}/pip" "${DUALDE_CACHE}/tmp" \
   "${DUALDE_CACHE}/huggingface" "${DUALDE_CACHE}/torch" \
-  "${DUALDE_CACHE}/matplotlib"
+  "${DUALDE_CACHE}/matplotlib" "${DUALDE_CACHE}/conda/pkgs"
 
 export PIP_CACHE_DIR="${PIP_CACHE_DIR:-${DUALDE_CACHE}/pip}"
+export CONDA_PKGS_DIRS="${CONDA_PKGS_DIRS:-${DUALDE_CACHE}/conda/pkgs}"
 export TMPDIR="${TMPDIR:-${DUALDE_CACHE}/tmp}"
 export TEMP="${TEMP:-${TMPDIR}}"
 export TMP="${TMP:-${TMPDIR}}"

@@ -38,9 +38,10 @@ NUDT15.
 
 ## Requirements
 
-- Python ≥ 3.10
+- Python **3.10** (conda)
 - NUDT15 example: tens of MB of disk; no GPU
-- Optional inference (ESM-2 650M or SPURS): NVIDIA GPU and CUDA PyTorch
+- Optional live ESM-2 650M: Python ≥ 3.12, NVIDIA GPU, CUDA PyTorch
+- Optional live SPURS: NVIDIA GPU and the GitHub SPURS package
 
 Core dependencies: `pandas`, `numpy`, `scipy`, `biopython`, `networkx`,
 `matplotlib`, `seaborn`.
@@ -49,30 +50,35 @@ Core dependencies: `pandas`, `numpy`, `scipy`, `biopython`, `networkx`,
 
 ## Installation
 
-Pip, Jupyter, Hugging Face, and Torch all default to `$HOME/.cache`. dualde
-does not: caches go to `$DUALDE_CACHE` (default `<clone>/.cache`), which
-must **not** be under `$HOME`.
+From a **fresh conda environment with Python 3.10**. Create the env **on
+scratch** (`-p`), not under `$HOME`. Source `scripts/env.sh` **before**
+`conda` or `pip` so package caches stay in `$DUALDE_CACHE` (default
+`<clone>/.cache`). That directory must not be under `$HOME`.
 
 ```bash
 git clone https://github.com/sgb67/dualde.git
 cd dualde
+
 # optional: export DUALDE_CACHE=/path/on/scratch/dualde-cache
-./scripts/install.sh notebooks
-source .venv/bin/activate
-```
-
-Manual equivalent (export **before** any ``pip`` command):
-
-```bash
 source scripts/env.sh
-python -m venv .venv
-source .venv/bin/activate
+
+conda create -y -p "$PWD/.conda" python=3.10 pip
+conda activate "$PWD/.conda"
+
 python -m pip install -U pip
 python -m pip install -e ".[notebooks]"
+python -m ipykernel install --sys-prefix --name dualde --display-name dualde
+
+python -c "from dualde import load_example, cache_root; print(load_example()[0]); print(cache_root())"
 ```
 
+`".[notebooks]"` installs Jupyter (`jupyter`, `ipykernel`, `nbclient`,
+`nbconvert`, `nbformat`). Later shells:
+
 ```bash
-python -c "from dualde import load_example, cache_root; print(load_example()[0]); print(cache_root())"
+cd dualde
+source scripts/env.sh
+conda activate "$PWD/.conda"
 ```
 
 If HTTPS clone requires credentials, use SSH (`git@github.com:sgb67/dualde.git`)
@@ -83,7 +89,9 @@ or an archival zip.
 ## Reproducing the NUDT15 example
 
 ```bash
-source .venv/bin/activate
+cd dualde
+source scripts/env.sh
+conda activate "$PWD/.conda"
 jupyter lab notebooks/
 ```
 
@@ -97,10 +105,12 @@ few minutes.
 
 Weights are not stored in this repository.
 
-**ESM-2 650M** (notebook 03):
+**ESM-2 650M** (notebook 03) needs **Python ≥ 3.12** (`evedesign`). Use a
+separate conda env; do not add `[evo]` to the 3.10 example environment.
 
 ```bash
-source scripts/env.sh    # if this shell did not use ./scripts/install.sh
+source scripts/env.sh
+conda activate "$PWD/.conda"   # or a python=3.12 env
 pip install -e ".[evo]"
 ```
 
@@ -110,6 +120,7 @@ Do not `pip install spurs` from PyPI.
 
 ```bash
 source scripts/env.sh
+conda activate "$PWD/.conda"
 pip install -e ".[spurs]"
 git clone https://github.com/luo-group/SPURS.git
 cd SPURS && git checkout fix/py311-inference-beta
