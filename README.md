@@ -38,7 +38,7 @@ NUDT15.
 
 ## Requirements
 
-- Python **3.10** (conda)
+- A conda environment with **Python 3.10** (already created)
 - NUDT15 example: tens of MB of disk; no GPU
 - Optional live ESM-2 650M: Python ≥ 3.12, NVIDIA GPU, CUDA PyTorch
 - Optional live SPURS: NVIDIA GPU and the GitHub SPURS package
@@ -50,20 +50,15 @@ Core dependencies: `pandas`, `numpy`, `scipy`, `biopython`, `networkx`,
 
 ## Installation
 
-From a **fresh conda environment with Python 3.10**. Create the env **on
-scratch** (`-p`), not under `$HOME`. Source `scripts/env.sh` **before**
-`conda` or `pip` so package caches stay in `$DUALDE_CACHE` (default
-`<clone>/.cache`). That directory must not be under `$HOME`.
+Activate your existing Python 3.10 conda env, then install dualde into it.
+
+Source `scripts/env.sh` **before pip** so wheels and model caches go to
+`$DUALDE_CACHE` (default `<clone>/.cache`), not `$HOME`.
 
 ```bash
-git clone https://github.com/sgb67/dualde.git
 cd dualde
-
-# optional: export DUALDE_CACHE=/path/on/scratch/dualde-cache
+conda activate /software/conda/users/$USER/<env>
 source scripts/env.sh
-
-conda create -y -p "$PWD/.conda" python=3.10 pip
-conda activate "$PWD/.conda"
 
 python -m pip install -U pip
 python -m pip install -e ".[notebooks]"
@@ -73,13 +68,7 @@ python -c "from dualde import load_example, cache_root; print(load_example()[0])
 ```
 
 `".[notebooks]"` installs Jupyter (`jupyter`, `ipykernel`, `nbclient`,
-`nbconvert`, `nbformat`). Later shells:
-
-```bash
-cd dualde
-source scripts/env.sh
-conda activate "$PWD/.conda"
-```
+`nbconvert`, `nbformat`).
 
 If HTTPS clone requires credentials, use SSH (`git@github.com:sgb67/dualde.git`)
 or an archival zip.
@@ -90,8 +79,8 @@ or an archival zip.
 
 ```bash
 cd dualde
+conda activate /software/conda/users/$USER/<env>
 source scripts/env.sh
-conda activate "$PWD/.conda"
 jupyter lab notebooks/
 ```
 
@@ -109,8 +98,8 @@ Weights are not stored in this repository.
 separate conda env; do not add `[evo]` to the 3.10 example environment.
 
 ```bash
+conda activate /software/conda/users/$USER/<env>   # Python ≥ 3.12 for [evo]
 source scripts/env.sh
-conda activate "$PWD/.conda"   # or a python=3.12 env
 pip install -e ".[evo]"
 ```
 
@@ -119,8 +108,8 @@ branch [`fix/py311-inference-beta`](https://github.com/luo-group/SPURS/tree/fix/
 Do not `pip install spurs` from PyPI.
 
 ```bash
+conda activate /software/conda/users/$USER/<env>
 source scripts/env.sh
-conda activate "$PWD/.conda"
 pip install -e ".[spurs]"
 git clone https://github.com/luo-group/SPURS.git
 cd SPURS && git checkout fix/py311-inference-beta
