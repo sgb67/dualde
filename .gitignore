@@ -12,6 +12,7 @@ examples/*/outputs/*
 examples/*/pdb/pdb*.ent
 *.ckpt
 *.pt
+.cache/
 hf_cache/
 torch_cache/
 .DS_Store

@@ -49,17 +49,30 @@ Core dependencies: `pandas`, `numpy`, `scipy`, `biopython`, `networkx`,
 
 ## Installation
 
+Pip, Jupyter, Hugging Face, and Torch all default to `$HOME/.cache`. dualde
+does not: caches go to `$DUALDE_CACHE` (default `<clone>/.cache`), which
+must **not** be under `$HOME`.
+
 ```bash
 git clone https://github.com/sgb67/dualde.git
 cd dualde
+# optional: export DUALDE_CACHE=/path/on/scratch/dualde-cache
+./scripts/install.sh notebooks
+source .venv/bin/activate
+```
+
+Manual equivalent (export **before** any ``pip`` command):
+
+```bash
+source scripts/env.sh
 python -m venv .venv
 source .venv/bin/activate
-pip install -U pip
-pip install -e ".[notebooks]"
+python -m pip install -U pip
+python -m pip install -e ".[notebooks]"
 ```
 
 ```bash
-python -c "from dualde import load_example; print(load_example()[0])"
+python -c "from dualde import load_example, cache_root; print(load_example()[0]); print(cache_root())"
 ```
 
 If HTTPS clone requires credentials, use SSH (`git@github.com:sgb67/dualde.git`)
@@ -70,6 +83,7 @@ or an archival zip.
 ## Reproducing the NUDT15 example
 
 ```bash
+source .venv/bin/activate
 jupyter lab notebooks/
 ```
 
@@ -86,8 +100,8 @@ Weights are not stored in this repository.
 **ESM-2 650M** (notebook 03):
 
 ```bash
+source scripts/env.sh    # if this shell did not use ./scripts/install.sh
 pip install -e ".[evo]"
-export HF_HOME="$PWD/.cache/huggingface"
 ```
 
 **SPURS** (notebook 04) — [luo-group/SPURS](https://github.com/luo-group/SPURS)
@@ -95,13 +109,12 @@ branch [`fix/py311-inference-beta`](https://github.com/luo-group/SPURS/tree/fix/
 Do not `pip install spurs` from PyPI.
 
 ```bash
+source scripts/env.sh
 pip install -e ".[spurs]"
 git clone https://github.com/luo-group/SPURS.git
 cd SPURS && git checkout fix/py311-inference-beta
 pip install -e . --no-deps
 cd ..
-export HF_HOME="$PWD/.cache/huggingface"
-export TORCH_HOME="$PWD/.cache/torch"
 ```
 
 Cached SPURS values are raw ΔΔ*G* (wild type = 0). Deconvolution uses −SPURS.

@@ -6,7 +6,11 @@ import json
 from pathlib import Path
 from typing import Any
 
+from dualde.cache import apply_cache_env, cache_root
+
 __version__ = "0.1.0"
+
+apply_cache_env()
 
 
 def repo_root() -> Path:
@@ -36,4 +40,11 @@ def load_example(name: str = "NUDT15_HUMAN") -> tuple[Path, dict[str, Any]]:
     return root, cfg
 
 
-__all__ = ["__version__", "example_dir", "load_example", "repo_root"]
+__all__ = [
+    "__version__",
+    "apply_cache_env",
+    "cache_root",
+    "example_dir",
+    "load_example",
+    "repo_root",
+]

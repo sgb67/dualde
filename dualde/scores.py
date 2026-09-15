@@ -10,6 +10,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from dualde.cache import apply_cache_env
 from dualde.mapping import extract_sequence_from_pdb, pdb_to_uniprot_map
 
 logger = logging.getLogger(__name__)
@@ -43,6 +44,7 @@ def run_esm2_650m(
     batch_size: int = 64,
 ) -> pd.DataFrame:
     """Saturated single-mutant ESM-2 650M scan. CUDA required."""
+    apply_cache_env()
     gpu = _require_cuda("ESM-2 650M inference")
     if device is not None and not str(device).startswith("cuda"):
         raise RuntimeError("ESM-2 650M inference requires device='cuda'.")
@@ -240,6 +242,7 @@ def run_spurs_scan(
     (GitHub ``luo-group/SPURS``, branch ``fix/py311-inference-beta``). Do not
     ``pip install spurs`` from PyPI.
     """
+    apply_cache_env()
     gpu = _require_cuda("SPURS inference")
     if device is not None and not str(device).startswith("cuda"):
         raise RuntimeError("SPURS inference requires device='cuda'.")
