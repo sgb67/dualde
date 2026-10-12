@@ -14,21 +14,13 @@ does not require a GPU or model weights.
 
 ## Overview
 
-| Stage | Notebook | Role |
-|-------|----------|------|
-| Structure | `01_mapping_and_contacts.ipynb` | UniProt↔PDB fragments for all homologous hits |
-| Structure | `02_select_structures.ipynb` | Fetch hits ≥60% seqID; ligand/homodimer contacts; RMSD for the SPURS PDB |
-| Scores | `03_evolutionary_scores.ipynb` | ESM-2 650M mutation scores |
-| Scores | `04_stability_spurs.ipynb` | SPURS ΔΔ*G* (raw; deconvolution uses −ΔΔ*G*) |
-| Deconvolution | `05_deconvolution.ipynb` | Rank-difference KDE of evolution vs stability |
-| Routing | `06_network_routing.ipynb` | Yen *k*-shortest paths on the coupling graph |
+| Notebook | Role |
+|----------|------|
+| `01_structures.ipynb` | Mapping, identity filter, contacts, RMSD |
+| `02_deconvolution.ipynb` | ESM-2, SPURS, DMS, rank-difference KDE |
+| `03_routing.ipynb` | Coupling paths and contact / RSA null tests |
 
-**ESM-2 650M** is the only sequence model dualde infers. **EVmutation** scores
-and the **coupling graph** come from the [EVcouplings webserver](https://evcouplings.org)
-(both are included for NUDT15).
-
-Live ESM-2 650M and SPURS inference run **only on CUDA**. Without a GPU,
-notebooks 03 and 04 load the precomputed tables.
+Scores and the coupling graph are the tables shipped under `examples/`. Notebooks run on CPU. RSA uses [FreeSASA](https://freesasa.github.io/).
 
 Protein-specific settings live in `examples/<protein>/config.json` (PDB id,
 chain, ligand residue names, DMS cutoffs). The Python API does not hard-code
@@ -39,12 +31,11 @@ NUDT15.
 ## Requirements
 
 - A conda environment with **Python 3.10** (already created)
-- NUDT15 example: tens of MB of disk; no GPU
-- Optional live ESM-2 650M: Python ≥ 3.12, NVIDIA GPU, CUDA PyTorch
-- Optional live SPURS: NVIDIA GPU and the GitHub SPURS package
+- NUDT15 example: tens of MB of disk
+- FreeSASA, for the RSA nulls in `03_routing.ipynb`
 
-Core dependencies: `pandas`, `numpy`, `scipy`, `biopython`, `networkx`,
-`matplotlib`, `seaborn`.
+Core dependencies: `pandas`, `numpy`, `scipy`, `biopython`, `freesasa`,
+`networkx`, `matplotlib`, `seaborn`.
 
 ---
 
@@ -83,38 +74,8 @@ source scripts/env.sh
 jupyter lab notebooks/
 ```
 
-Run notebooks **01–06 in order** (Restart & Run All). Outputs go to
-`examples/NUDT15_HUMAN/outputs/`. CPU runtime with the shipped tables is a
-few minutes.
-
----
-
-## Optional GPU inference
-
-Weights are not stored in this repository.
-
-**ESM-2 650M** (notebook 03) needs **Python ≥ 3.12** (`evedesign`). Use a
-separate conda env; do not add `[evo]` to the 3.10 example environment.
-
-```bash
-conda activate /software/conda/users/$USER/<env>   # Python ≥ 3.12 for [evo]
-source scripts/env.sh
-pip install -e ".[evo]"
-```
-
-**SPURS** (notebook 04) — [luo-group/SPURS](https://github.com/luo-group/SPURS)
-branch [`fix/py311-inference-beta`](https://github.com/luo-group/SPURS/tree/fix/py311-inference-beta).
-Do not `pip install spurs` from PyPI.
-
-```bash
-conda activate /software/conda/users/$USER/<env>
-source scripts/env.sh
-pip install -e ".[spurs]"
-git clone https://github.com/luo-group/SPURS.git
-cd SPURS && git checkout fix/py311-inference-beta
-pip install -e . --no-deps
-cd ..
-```
+Run `01_structures.ipynb`, `02_deconvolution.ipynb`, then `03_routing.ipynb`.
+Outputs go to `examples/NUDT15_HUMAN/outputs/`.
 
 Cached SPURS values are raw ΔΔ*G* (wild type = 0). Deconvolution uses −SPURS.
 
@@ -148,10 +109,11 @@ edit `config.json`. Then:
    belong to the PDBe preferred biological assembly (with the query chain);
    crystal-packing copies are ignored. RMSD clustering is only used to justify
    the representative PDB for SPURS; it does not drop contact sites.
-3. **Evolution.** ESM-2 650M on GPU, or a table with `mutation` / `ESM2_650M`.
-4. **Stability.** SPURS on GPU, or a UniProt-numbered raw ΔΔ*G* table.
-5. **Deconvolution and routing.** Notebooks 05–06 use the cutoffs and ligands
-   in `config.json`.
+3. **Evolution.** A table with `mutation` / `ESM2_650M`, plus `EVmutation` from EVcouplings.
+4. **Stability.** A UniProt-numbered raw ΔΔ*G* table (`spurs`). Deconvolution uses −SPURS.
+5. **Deconvolution, routing, and null tests.** `02_deconvolution.ipynb` and
+   `03_routing.ipynb` use the cutoffs and ligands in `config.json`. Routing
+   builds a Cα contact graph and FreeSASA RSA from the representative PDB.
 
 ---
 

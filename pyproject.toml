@@ -36,6 +36,7 @@ dependencies = [
   "numpy",
   "scipy",
   "biopython",
+  "freesasa",
   "networkx",
   "matplotlib",
   "seaborn",

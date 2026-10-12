@@ -1,4 +1,8 @@
-"""ESM-2 650M and SPURS scores (CUDA only for live inference)."""
+"""Precomputed ESM-2 650M and SPURS tables.
+
+Notebooks load these tables and do not run either model. The scan helpers
+at the bottom of this module are unused by the notebooks.
+"""
 
 from __future__ import annotations
 
