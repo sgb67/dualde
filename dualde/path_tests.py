@@ -2,7 +2,8 @@
 
 Three tests, each with a discrete or a continuous statistic:
 
-* contact-graph decoys of the same length
+* contact-graph decoys of the same length (Cα–Cα graph; ``cutoff`` is
+  ``contact_distance_cutoff`` and is used only here)
 * the same decoys, kept only when their mean RSA matches the path
 * random residue sets matched residue-by-residue on RSA
 

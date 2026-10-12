@@ -17,7 +17,7 @@ does not require a GPU or model weights.
 | Notebook | Role |
 |----------|------|
 | `01_structures.ipynb` | Mapping, identity filter, contacts, RMSD |
-| `02_deconvolution.ipynb` | ESM-2, SPURS, DMS, rank-difference KDE |
+| `02_deconvolution.ipynb` | ESM-2, EVmutation, SPURS, DMS, rank-difference KDE |
 | `03_routing.ipynb` | Coupling paths and contact / RSA null tests |
 
 Scores and the coupling graph are the tables shipped under `examples/`. Notebooks run on CPU. RSA uses [FreeSASA](https://freesasa.github.io/).
@@ -88,6 +88,9 @@ dualde does not fit a Potts model. For a new protein:
 1. Submit the FASTA at [evcouplings.org](https://evcouplings.org).
 2. Download the single-mutant / EVmutation table (labels such as `Q144A`).
 3. Download `*CouplingScoresCompared_all.csv` (`i`, `j`, `probability`, `dist`).
+   `dist` is the minimum heavy-atom distance (Å), the smaller of `dist_intra`
+   and `dist_multimer`. `dist_cutoff` (5 Å in the example) zeroes the coupling
+   probability of pairs farther than that. It is not the Cα contact graph.
 
 ---
 
@@ -105,15 +108,21 @@ edit `config.json`. Then:
 2. **Structures and contacts.** `select_structures` fetches every mapped PDB.
    Keep chains whose identity to the query is ≥ `min_identity` (default 0.6,
    over the full query length). `residue_contacts_from_structures` then scores
-   ligands and homodimer interfaces on those hits. Protein partners must also
+   ligands and homodimer interfaces on those hits
+   (`interface_distance_cutoff`, all-atom). Protein partners must also
    belong to the PDBe preferred biological assembly (with the query chain);
    crystal-packing copies are ignored. RMSD clustering is only used to justify
    the representative PDB for SPURS; it does not drop contact sites.
 3. **Evolution.** A table with `mutation` / `ESM2_650M`, plus `EVmutation` from EVcouplings.
 4. **Stability.** A UniProt-numbered raw ΔΔ*G* table (`spurs`). Deconvolution uses −SPURS.
-5. **Deconvolution, routing, and null tests.** `02_deconvolution.ipynb` and
-   `03_routing.ipynb` use the cutoffs and ligands in `config.json`. Routing
-   builds a Cα contact graph and FreeSASA RSA from the representative PDB.
+5. **Deconvolution, routing, and null tests.** `02_deconvolution.ipynb` writes
+   the rank-difference scores, including `score_col`
+   (`EVmutation_neg_spurs_model` in the example). Routing uses that column to
+   choose target positions. `contact_distance_cutoff` is the Cα–Cα distance
+   used only to build the contact graph for the structural null tests.
+   `interface_distance_cutoff` is the separate all-atom cutoff for recording
+   ligand and homodimer contacts. `functional_dist_cutoff` then marks
+   functional residues on that contact table.
 
 ---
 
@@ -123,7 +132,7 @@ Please cite the dualde manuscript and the methods it wraps:
 
 - **ESM-2.** Lin, Z. *et al.* *Science* **379**, 1123–1130 (2023).
 - **SPURS.** Li, P. & Luo, Y. *Nat. Commun.* (2025). doi:10.1038/s41467-025-67609-4
-- **EVcouplings.** Hopf, T. A. *et al.* *Nat. Biotechnol.* **35**, 128–135 (2017).
+- **EVcouplings.** Hopf, T. A. *et al.* *Nat. Biotechnol.* **35**, 128–135 (2017). Software: Hopf, T. A. *et al.* *Bioinformatics* **35**, 1582–1584 (2019).
 - **NUDT15 DMS.** Yan, R. *et al.* (2020), tables under `examples/NUDT15_HUMAN/dms/`.
 
 See `CITATION.cff`.

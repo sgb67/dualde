@@ -165,8 +165,13 @@ def load_coupling_grid(
     seq_len=None,
 ):
     """
-    Load EVcouplings Compared_all CSV (path or DataFrame), zero probability for
-    dist > dist_cutoff, pivot to square probability grid.
+    Load an EVcouplings ``*CouplingScoresCompared_all.csv``.
+
+    ``dist`` is the minimum heavy-atom distance (Å) between the two residues
+    in the compared structure, the smaller of ``dist_intra`` and
+    ``dist_multimer``. Pairs with ``dist`` above ``dist_cutoff`` have their
+    coupling probability set to zero. This cutoff is separate from the Cα
+    ``contact_distance_cutoff`` used only by the structural null tests.
     """
     if isinstance(couplings_file, pd.DataFrame):
         coup = couplings_file.copy()
