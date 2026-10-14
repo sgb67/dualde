@@ -18,7 +18,7 @@ does not require a GPU or model weights.
 |----------|------|
 | `01_structures.ipynb` | Mapping, identity filter, contacts, RMSD |
 | `02_deconvolution.ipynb` | ESM-2, EVmutation, SPURS, DMS, rank-difference KDE |
-| `03_routing.ipynb` | Coupling paths and contact / RSA null tests |
+| `03_routing.ipynb` | b0.5 coupling paths and contact / RSA null tests |
 
 Scores and the coupling graph are the tables shipped under `examples/`. Notebooks run on CPU. RSA uses [FreeSASA](https://freesasa.github.io/).
 
@@ -91,6 +91,10 @@ dualde does not fit a Potts model. For a new protein:
    `dist` is the minimum heavy-atom distance (Å), the smaller of `dist_intra`
    and `dist_multimer`. `dist_cutoff` (5 Å in the example) zeroes the coupling
    probability of pairs farther than that. It is not the Cα contact graph.
+   The NUDT15 example routes on the bitscore 0.5 graph
+   (`couplings/b0.5_CouplingScoresCompared_all.csv`). Evolutionary scores in
+   `scores/phenotype.csv` and `scores/evolutionary.csv`, including EVE, are the
+   b0.5 scores.
 
 ---
 
@@ -117,8 +121,12 @@ edit `config.json`. Then:
 4. **Stability.** A UniProt-numbered raw ΔΔ*G* table (`spurs`). Deconvolution uses −SPURS.
 5. **Deconvolution, routing, and null tests.** `02_deconvolution.ipynb` writes
    the rank-difference scores, including `score_col`
-   (`EVmutation_neg_spurs_model` in the example). Routing uses that column to
-   choose target positions. `contact_distance_cutoff` is the Cα–Cα distance
+   (`EVmutation_neg_spurs_model`). Routing reads `scores/phenotype.csv`
+   (mutants with activity, stability, and
+   `routing_score_col` = `EVmutation_neg_spurs_multi_min_model`) and the b0.5
+   coupling graph. Reference paths for the example proteins are in
+   `examples/routing_results/`. Paths with more than `min_n_edges` edges are
+   passed to the three null tests. `contact_distance_cutoff` is the Cα–Cα distance
    used only to build the contact graph for the structural null tests.
    `interface_distance_cutoff` is the separate all-atom cutoff for recording
    ligand and homodimer contacts. `functional_dist_cutoff` then marks

@@ -11,5 +11,4 @@ abstract: >-
   Dual-graph deconvolution of enzyme fitness. dualde separates
   evolutionary constraint from thermodynamic stability for single-residue
   substitutions and routes putative catalytic signal over an EVcouplings
-  residue graph. This repository provides the Python package and a
-  NUDT15 / PDB 5lpg example.
+  residue graph.
