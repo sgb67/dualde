@@ -136,8 +136,9 @@ edit `config.json`. Then:
 
 ## Citation
 
-Please cite the dualde manuscript and the methods it wraps:
+Please cite the dualde preprint and the methods it wraps:
 
+- **dualde.** Garcia Busto, S. *et al.* *bioRxiv* (2026). doi:10.64898/2026.10.15.759402
 - **ESM-2.** Lin, Z. *et al.* *Science* **379**, 1123–1130 (2023).
 - **SPURS.** Li, P. & Luo, Y. *Nat. Commun.* (2025). doi:10.1038/s41467-025-67609-4
 - **EVcouplings.** Hopf, T. A. *et al.* *Nat. Biotechnol.* **35**, 128–135 (2017). Software: Hopf, T. A. *et al.* *Bioinformatics* **35**, 1582–1584 (2019).

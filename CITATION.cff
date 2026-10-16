@@ -1,9 +1,20 @@
 cff-version: 1.2.0
 title: dualde
-message: If you use this software, please cite the dualde manuscript and the methods it wraps (ESM-2, SPURS, EVcouplings).
+message: If you use this software, please cite the dualde preprint.
 type: software
 authors:
-  - family-names: dualde authors
+  - family-names: Garcia Busto
+    given-names: S.
+  - family-names: Eschbach
+    given-names: E.
+  - family-names: Hopf
+    given-names: T. A.
+  - family-names: Sander
+    given-names: C.
+  - family-names: Bacallado
+    given-names: S.
+  - family-names: Marks
+    given-names: D. S.
 repository-code: https://github.com/sgb67/dualde
 license: MIT
 version: 0.1.0
@@ -12,3 +23,27 @@ abstract: >-
   evolutionary constraint from thermodynamic stability for single-residue
   substitutions and routes putative catalytic signal over an EVcouplings
   residue graph.
+preferred-citation:
+  type: article
+  title: >-
+    Dual-graph deconvolution of enzyme fitness: an interpretable framework
+    to identify and explain catalytic modulators
+  authors:
+    - family-names: Garcia Busto
+      given-names: S.
+    - family-names: Eschbach
+      given-names: E.
+    - family-names: Hopf
+      given-names: T. A.
+    - family-names: Sander
+      given-names: C.
+    - family-names: Bacallado
+      given-names: S.
+    - family-names: Marks
+      given-names: D. S.
+  year: 2026
+  date-released: 2026-10-15
+  doi: 10.64898/2026.10.15.759402
+  url: https://www.biorxiv.org/content/10.64898/2026.10.15.759402v1
+  journal: bioRxiv
+  version: "1"
